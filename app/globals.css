@@ -136,7 +136,7 @@ mark { background: #fbe2ae; color: var(--tinta); border-radius: 3px; padding: 0 
 .resultados h2 { margin-top: 0; }
 .achado {
   display: block; text-decoration: none; background: var(--branco); border: 1px solid var(--linha);
-  border-left: 4px solid var(--ouro); border-radius: var(--raio); padding: 12px 14px; margin-bottom: 8px;
+  border-radius: var(--raio); padding: 12px 14px; margin-bottom: 8px;
 }
 .achado:hover { border-color: var(--ouro-escuro); }
 .achado p { margin: 6px 0 0; font-size: 14px; color: var(--tinta-2); }
