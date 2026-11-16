@@ -124,3 +124,101 @@ code, .mono { font-family: var(--mono); font-size: 12px; }
   .quem { margin-left: 0; width: 100%; }
   h1 { font-size: 22px; }
 }
+
+/* ===== Cérebro (16/11/2026) ===== */
+.cabeca { display: flex; gap: 16px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
+.cabeca .botao { margin-top: 4px; }
+.busca { display: flex; gap: 8px; margin: 0 0 20px; }
+.busca input { flex: 1; font-size: 16px; padding: 10px 12px; }
+mark { background: #fbe2ae; color: var(--tinta); border-radius: 3px; padding: 0 2px; }
+
+.resultados { margin-bottom: 24px; }
+.resultados h2 { margin-top: 0; }
+.achado {
+  display: block; text-decoration: none; background: var(--branco); border: 1px solid var(--linha);
+  border-left: 4px solid var(--ouro); border-radius: var(--raio); padding: 12px 14px; margin-bottom: 8px;
+}
+.achado:hover { border-color: var(--ouro-escuro); }
+.achado p { margin: 6px 0 0; font-size: 14px; color: var(--tinta-2); }
+
+.painel-mapa { background: var(--tinta); border-radius: 14px; padding: 12px 12px 14px; margin-bottom: 28px; border: 1px solid #222; }
+.mapa { display: block; width: 100%; height: auto; }
+.mapa a { cursor: pointer; }
+.mapa-linha { stroke: #f4aa27; stroke-opacity: .16; stroke-width: 1; }
+.mapa-linha.forte { stroke-opacity: .32; stroke-width: 1.5; }
+.mapa-tema { fill: #161616; stroke: #f4aa27; stroke-width: 1.5; transition: fill .15s; }
+.mapa a:hover .mapa-tema { fill: #2a2110; }
+.mapa-num { fill: #f4aa27; font: 700 13px var(--fonte); }
+.mapa-rotulo-tema, .mapa-rotulo-centro, .mapa-rotulo-verbete {
+  paint-order: stroke; stroke: #0b0b0b; stroke-width: 4px; stroke-linejoin: round;
+}
+.mapa-rotulo-tema { fill: #f6f3ec; font: 600 13px var(--fonte); }
+.mapa-rotulo-centro { fill: #f4aa27; font: 700 15px var(--fonte); letter-spacing: .04em; }
+.mapa-rotulo-verbete { fill: #a9a397; font: 10.5px var(--fonte); }
+.mapa a:hover .mapa-rotulo-verbete { fill: #f6f3ec; }
+.mapa-verbete { stroke-width: 1.5; }
+.mapa-verbete.ok { fill: #f4aa27; stroke: #f4aa27; }
+.mapa-verbete.revisar { fill: #7a5208; stroke: #f4aa27; }
+.mapa-verbete.a_preencher { fill: #0b0b0b; stroke: #7b766c; stroke-dasharray: 2 2; }
+.mapa a:hover .mapa-verbete { stroke: #fff; }
+.legenda { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: #d8d3c7; padding: 4px 8px 0; align-items: center; }
+.legenda .mudo-escuro { color: #8a8478; margin-left: auto; }
+.ponto { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; border: 1.5px solid #f4aa27; }
+.ponto.ok { background: #f4aa27; }
+.ponto.revisar { background: #7a5208; }
+.ponto.a_preencher { background: transparent; border: 1.5px dashed #7b766c; }
+
+.filtros { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+.chip { text-decoration: none; font-size: 13px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--linha); background: var(--branco); color: var(--tinta-2); }
+.chip span { color: var(--tinta-3); margin-left: 2px; }
+.chip.ativo { background: var(--tinta); border-color: var(--tinta); color: var(--papel); }
+.chip.ativo span { color: var(--ouro); }
+.bloco-tema h2 .mudo { font-weight: 400; }
+.cartao.verbete { text-decoration: none; display: block; }
+.cartao.verbete:hover { border-color: var(--ouro-escuro); }
+.cartao.verbete.s-a_preencher { background: transparent; border-style: dashed; }
+.previa { font-size: 13.5px; color: var(--tinta-2); margin: 6px 0 0; white-space: pre-line; }
+.etiqueta.s-ok { background: #dcefe2; color: var(--verde); }
+.etiqueta.s-a_preencher { background: var(--papel-2); color: var(--tinta-3); }
+.etiqueta.s-revisar { background: #f8ebc9; color: var(--amarelo); }
+
+.texto-verbete { background: var(--branco); border: 1px solid var(--linha); border-radius: var(--raio); padding: 16px 20px; max-width: 760px; }
+.texto-verbete p { margin: 0 0 8px; }
+.texto-verbete p:last-child { margin: 0; }
+.editar { margin-top: 20px; max-width: 760px; }
+.editar summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
+.formulario { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+.formulario label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; color: var(--tinta-2); }
+.formulario .duas { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+input[type=date] { font: inherit; padding: 7px 10px; border: 1px solid var(--linha); border-radius: 8px; background: var(--branco); }
+.aviso.ok { background: #dcefe2; border-color: #b9dcc4; }
+.aviso.erro { background: #f5d9d2; border-color: #e3b5aa; }
+
+.faixa-cerebro {
+  display: flex; align-items: center; gap: 14px; text-decoration: none; background: var(--tinta); color: var(--papel);
+  border-radius: 12px; padding: 14px 18px; margin: 0 0 16px; border: 1px solid #222;
+}
+.faixa-cerebro:hover { border-color: var(--ouro); }
+.faixa-cerebro .nucleo {
+  width: 30px; height: 30px; border-radius: 50%; flex: none;
+  background: radial-gradient(circle at 40% 35%, #ffd27a, #f4aa27 55%, #8a5a08); box-shadow: 0 0 18px rgba(244, 170, 39, .45);
+}
+.faixa-texto { display: flex; flex-direction: column; line-height: 1.3; }
+.faixa-texto span { font-size: 13px; color: #b9b3a6; }
+.faixa-temas { display: flex; gap: 4px; margin-left: auto; }
+.faixa-temas span { width: 22px; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #f4aa27 calc(var(--p) * 100%), #333 0); }
+.faixa-ir { color: var(--ouro); font-weight: 600; font-size: 14px; white-space: nowrap; }
+.funcao { font-size: 13px; color: var(--ouro-escuro); font-weight: 600; margin-bottom: 2px; }
+.habilidades { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+.habilidades span { font-size: 11.5px; padding: 2px 8px; border-radius: 999px; background: var(--papel); border: 1px solid var(--linha); color: var(--tinta-2); }
+.habilidades span.cerebro { background: #fbe9c4; border-color: #f0d9a6; color: #7a5208; font-weight: 600; }
+
+@media (max-width: 720px) {
+  .formulario .duas { grid-template-columns: 1fr; }
+  .faixa-temas { display: none; }
+  .legenda .mudo-escuro { margin-left: 0; }
+  /* no celular o mapa não encolhe até sumir: fica legível e arrasta de lado */
+  .mapa-rolagem { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .mapa { min-width: 700px; }
+  .legenda .mudo-escuro::after { content: ' Arraste pro lado pra ver tudo.'; }
+}

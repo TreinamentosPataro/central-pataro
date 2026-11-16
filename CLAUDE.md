@@ -27,6 +27,10 @@ o agente executa. Tudo deixa rastro na **auditoria**.
 - Senha, token e chave de agente: nunca no git, em log ou em chat. Chave de agente só existe como hash no banco
 - Dado de aluno nunca entra no git: planilhas em `importacoes/` (ignorada)
 - Toda ação é idempotente (`chave_idem` na proposta; marcar executado duas vezes não muda nada)
+- **Cérebro** (`lib/cerebro.ts`, tela `/cerebro`): conhecimento da empresa que todo agente consulta antes de agir
+  (`GET /api/agente/cerebro?q=`, com a chave do agente; cada busca vai pra auditoria). Nunca dado de aluno: texto
+  com CPF é recusado. Verbete vazio ou vencido = o agente não responde sozinho sobre aquilo. A carga inicial
+  (`lib/cerebro-inicial.ts`) não sobrescreve o que alguém editou
 
 ## Convenções
 

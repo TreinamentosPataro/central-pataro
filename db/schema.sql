@@ -183,6 +183,26 @@ CREATE TRIGGER auditoria_sem_alteracao
   BEFORE UPDATE OR DELETE ON auditoria
   FOR EACH ROW EXECUTE FUNCTION auditoria_imutavel();
 
+-- Cérebro: o que a Pataro sabe e vale pra todo agente (oferta, políticas, processo, números, tom, aulas).
+-- Nunca dado de aluno: isso fica nas fichas. Cada mudança vai pra auditoria com antes e depois.
+CREATE TABLE IF NOT EXISTS cerebro (
+  id              text PRIMARY KEY,          -- slug estável, ex.: politica-reembolso
+  tema            text NOT NULL,             -- ver TEMAS em lib/cerebro.ts
+  titulo          text NOT NULL,
+  conteudo        text NOT NULL DEFAULT '',  -- vazio = "a preencher"
+  dono            text,                      -- quem responde pelo que está escrito
+  revisar_em      date,                      -- depois disso aparece como "revisar"
+  fonte           text,                      -- de onde saiu (documento, reunião, site)
+  atualizado_por  text,
+  atualizado_em   timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS cerebro_busca_idx ON cerebro
+  USING gin (to_tsvector('portuguese', titulo || ' ' || conteudo));
+
+-- O que cada agente sabe fazer (aparece no cartão). Coluna nova: ADD IF NOT EXISTS pra bancos já criados.
+ALTER TABLE agentes ADD COLUMN IF NOT EXISTS habilidades jsonb NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE agentes ADD COLUMN IF NOT EXISTS funcao text;
+
 CREATE INDEX IF NOT EXISTS fila_estado_idx ON fila (estado, criado_em);
 CREATE INDEX IF NOT EXISTS auditoria_quando_idx ON auditoria (quando DESC);
 CREATE INDEX IF NOT EXISTS sinais_escritorio_idx ON sinais (escritorio_id, data DESC);

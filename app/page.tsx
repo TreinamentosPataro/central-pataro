@@ -4,6 +4,7 @@ import { getBanco } from '@/lib/db'
 import { exigirUsuario } from '@/lib/sessao'
 import { alternarParada, listarAgentes } from '@/lib/agentes'
 import { pode } from '@/lib/papeis'
+import { listarVerbetes, resumoPorTema, situacao } from '@/lib/cerebro'
 
 const STATUS: Record<string, string> = { no_ar: 'No ar', em_construcao: 'Em construção', parado: 'Parado' }
 
@@ -25,6 +26,12 @@ export default async function Agentes() {
   const db = await getBanco()
   const agentes = await listarAgentes(db)
   const pendentes = agentes.reduce((s, a) => s + (a.pendentes ?? 0), 0)
+  const verbetes = await listarVerbetes(db)
+  const emDia = verbetes.filter((v) => situacao(v) === 'ok').length
+  const temas = resumoPorTema(verbetes)
+  const [c] = await db.query<{ n: number }>(
+    `SELECT count(*)::int AS n FROM auditoria WHERE acao = 'cerebro.buscar' AND quando > now() - interval '7 days'`)
+  const consultas = c?.n ?? 0
 
   return (
     <>
@@ -34,6 +41,22 @@ export default async function Agentes() {
           ? <><Link href="/fila">{pendentes} {pendentes === 1 ? 'item espera' : 'itens esperam'} aprovação</Link>.</>
           : 'Nada esperando aprovação.'}
       </p>
+      <Link href="/cerebro" className="faixa-cerebro">
+        <span className="nucleo" aria-hidden />
+        <span className="faixa-texto">
+          <b>Cérebro</b>
+          <span>
+            {emDia} de {verbetes.length} verbetes em dia · {consultas} {consultas === 1 ? 'consulta' : 'consultas'} dos agentes em 7 dias
+          </span>
+        </span>
+        <span className="faixa-temas" aria-hidden>
+          {temas.map((t) => (
+            <span key={t.id} title={t.nome} style={{ '--p': t.verbetes.length ? t.ok / t.verbetes.length : 0 } as React.CSSProperties} />
+          ))}
+        </span>
+        <span className="faixa-ir">Abrir →</span>
+      </Link>
+
       <div className="cartoes">
         {agentes.map((a) => {
           const decididos = (a.aprovados_semana ?? 0) + (a.ajustados_semana ?? 0) + (a.descartados_semana ?? 0)
@@ -46,8 +69,14 @@ export default async function Agentes() {
                 {a.prazo && <span className="mudo">prazo {a.prazo}</span>}
               </div>
               <h3>{a.nome}</h3>
+              {a.funcao && <div className="funcao">{a.funcao}</div>}
               <div className="mudo">Dono: {a.dono} · última execução: {quando(a.ultima_execucao)}</div>
               {a.descricao && <p style={{ fontSize: 14, margin: '8px 0 0' }}>{a.descricao}</p>}
+              {a.habilidades?.length > 0 && (
+                <div className="habilidades">
+                  {a.habilidades.map((h) => <span key={h} className={h === 'Buscar no Cérebro' ? 'cerebro' : ''}>{h}</span>)}
+                </div>
+              )}
               <div className="numeros">
                 <span><b>{a.pendentes ?? 0}</b>na fila</span>
                 <span><b>{decididos ? `${a.aprovados_semana}/${decididos}` : '—'}</b>aprovados sem mexer (7d)</span>

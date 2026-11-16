@@ -12,6 +12,8 @@ export interface Agente {
   prazo: string | null
   status: 'no_ar' | 'em_construcao' | 'parado'
   descricao: string | null
+  funcao: string | null
+  habilidades: string[]
   parado: boolean
   ultima_execucao: string | null
   pendentes?: number
@@ -23,7 +25,7 @@ export interface Agente {
 
 export async function listarAgentes(db: Banco): Promise<Agente[]> {
   return db.query<Agente>(
-    `SELECT a.id, a.nome, a.dono, to_char(a.prazo, 'DD/MM') AS prazo, a.status, a.descricao, a.parado,
+    `SELECT a.id, a.nome, a.dono, to_char(a.prazo, 'DD/MM') AS prazo, a.status, a.descricao, a.funcao, a.habilidades, a.parado,
             a.ultima_execucao,
             (SELECT count(*)::int FROM fila f WHERE f.agente_id = a.id AND f.estado = 'pendente') AS pendentes,
             (SELECT count(*)::int FROM fila f WHERE f.agente_id = a.id AND f.estado = 'aprovado'

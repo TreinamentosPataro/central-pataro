@@ -7,7 +7,7 @@ import { NOME_PAPEL } from '@/lib/papeis'
 
 export const metadata: Metadata = {
   title: 'Central · Pataro',
-  description: 'Agentes de IA da Pataro num lugar só: fila de aprovação, alunos e auditoria.',
+  description: 'Agentes de IA da Pataro num lugar só: Cérebro, fila de aprovação, alunos e auditoria.',
   robots: { index: false, follow: false },
 }
 
@@ -32,6 +32,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
               </Link>
               <nav className="nav" aria-label="Seções">
                 <Link href="/">Agentes</Link>
+                <Link href="/cerebro">Cérebro</Link>
                 <Link href="/fila">
                   Fila{pendentes > 0 && <span className="contador">{pendentes}</span>}
                 </Link>

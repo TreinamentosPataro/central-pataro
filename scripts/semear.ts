@@ -9,6 +9,7 @@
 import { getBanco } from '../lib/db'
 import { auditar } from '../lib/auditoria'
 import { proporItem } from '../lib/fila'
+import { semearCerebro } from '../lib/cerebro'
 
 const db = await getBanco()
 
@@ -28,23 +29,32 @@ for (const u of usuarios) {
 }
 
 // Prazos da reunião de 12/11/2026 e das atividades passadas pelo Hoklo em 13/11
-const agentes = [
-  ['cs', 'Agente de CS', 'Norman (Hoklo planeja)', '2026-11-18', 'Lê as fontes de cada aluno, cruza e propõe. Nada sai sem aprovação.', 1],
-  ['contratos', 'Agente de contratos', 'Norman', '2026-11-18', 'Contrato da Trilha preenchido e enviado pro ZapSign. Faltou dado → avisa o comercial.', 2],
-  ['sdr', 'Agente SDR', 'Norman', '2026-11-23', 'Atende o lead do primeiro contato até o contrato.', 3],
-  ['trafego', 'Tráfego', 'Hoklo', '2026-11-20', null, 4],
-  ['social', 'Social media', 'Hoklo', '2026-11-19', null, 5],
-  ['financeiro', 'Agente financeiro', 'Hoklo', '2026-11-27', null, 6],
-] as const
+// [id, nome, função, dono, prazo, descrição, habilidades, ordem]
+const agentes: [string, string, string, string, string, string | null, string[], number][] = [
+  ['cs', 'Agente de CS', 'Atendimento aos alunos', 'Norman (Hoklo planeja)', '2026-11-18',
+    'Lê os grupos e as fontes de cada aluno, cruza com o Cérebro e propõe a resposta. Nada sai sem aprovação.',
+    ['Buscar no Cérebro', 'Ler grupos', 'Ficha do aluno', 'Propor resposta'], 1],
+  ['contratos', 'Agente de contratos', 'Contratos da Trilha e da Confraria', 'Norman', '2026-11-18',
+    'Acha o contrato novo no Drive, confere os dados, sobe no ZapSign e acompanha a assinatura. Faltou dado → avisa o comercial.',
+    ['Buscar no Cérebro', 'Conferir contrato', 'ZapSign', 'Avisar o comercial'], 2],
+  ['sdr', 'Agente SDR', 'Primeiro contato com o lead', 'Norman', '2026-11-23',
+    'Atende o lead do primeiro contato até passar pro closer, com o roteiro do Cérebro.',
+    ['Buscar no Cérebro', 'Qualificar lead', 'Resumo pro closer'], 3],
+  ['trafego', 'Tráfego', 'Anúncios', 'Hoklo', '2026-11-20', null, ['Buscar no Cérebro'], 4],
+  ['social', 'Social media', 'Conteúdo e perfis', 'Hoklo', '2026-11-19', null, ['Buscar no Cérebro'], 5],
+  ['financeiro', 'Agente financeiro', 'Contas a receber', 'Hoklo', '2026-11-27', null, ['Buscar no Cérebro'], 6],
+]
 
-for (const [id, nome, dono, prazo, descricao, ordem] of agentes) {
+for (const [id, nome, funcao, dono, prazo, descricao, habilidades, ordem] of agentes) {
   await db.query(
-    `INSERT INTO agentes (id, nome, dono, prazo, descricao, ordem) VALUES ($1, $2, $3, $4, $5, $6)
-     ON CONFLICT (id) DO UPDATE SET nome = EXCLUDED.nome, dono = EXCLUDED.dono, prazo = EXCLUDED.prazo,
-       descricao = EXCLUDED.descricao, ordem = EXCLUDED.ordem`,
-    [id, nome, dono, prazo, descricao, ordem],
+    `INSERT INTO agentes (id, nome, funcao, dono, prazo, descricao, habilidades, ordem) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+     ON CONFLICT (id) DO UPDATE SET nome = EXCLUDED.nome, funcao = EXCLUDED.funcao, dono = EXCLUDED.dono,
+       prazo = EXCLUDED.prazo, descricao = EXCLUDED.descricao, habilidades = EXCLUDED.habilidades, ordem = EXCLUDED.ordem`,
+    [id, nome, funcao, dono, prazo, descricao, JSON.stringify(habilidades), ordem],
   )
 }
+const novosNoCerebro = await semearCerebro(db)
+console.log(`Cérebro: ${novosNoCerebro} verbetes novos.`)
 await auditar(db, { quem: 'sistema', acao: 'semente.rodou', depois: { usuarios: usuarios.length, agentes: agentes.length } })
 console.log(`${usuarios.length} usuários e ${agentes.length} agentes cadastrados.`)
 
