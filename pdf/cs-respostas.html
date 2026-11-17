@@ -22,18 +22,18 @@ p{margin:5pt 0}
 mesmo registro que os outros agentes. Não é uma ferramenta separada: é o primeiro agente de verdade da Central,
 que já está no ar.</p>
 <h2>O que é a Fase 1</h2>
-<p>A Fase 1 é <strong>semiautomática</strong>: o agente <strong>enxerga</strong> tudo sobre cada aluno e <strong>sugere</strong> o que fazer. <strong>Nada sai
-pro aluno sem uma pessoa aprovar.</strong></p>
+<p>A Fase 1 é <strong>semiautomática</strong>: o agente <strong>enxerga</strong> tudo sobre cada aluno, <strong>escreve</strong> a mensagem e, <strong>depois que
+uma pessoa aprova na Central</strong>, ele mesmo <strong>manda</strong> pelo WhatsApp. Nada sai pro aluno sem aprovação.</p>
 <p><strong>Na prática, pra vocês:</strong></p>
 <ol>
 <li><strong>Ficha de cada escritório.</strong> Na Central aparece o que o aluno disse querer na call, em que etapa está, o
    plano de ação (o que fez, o que atrasou, o que parou), o Raio-X, o ranking e o que ele anda falando nos grupos</li>
 <li><strong>Cor de saúde com o motivo.</strong> Cada ficha diz verde, amarelo ou vermelho e por quê. Exemplo: "amarelo: 3
    cartões parados há 12 dias e não aparece no grupo desde 02/12"</li>
-<li><strong>Fila de decisões.</strong> Mostra quem precisa de quê, com a prova e um rascunho de mensagem. Vocês aprovam,
-   ajustam ou descartam</li>
-<li><strong>Modo sombra nas primeiras semanas.</strong> O agente sugere e vocês marcam se mandariam aquilo. O envio pelo
-   WhatsApp só liga depois que essa comparação passar (ver pergunta 8)</li>
+<li><strong>Fila de decisões.</strong> Mostra quem precisa de quê, com a prova e a mensagem pronta. Vocês aprovam, ajustam o
+   texto ou descartam</li>
+<li><strong>Envio depois da aprovação.</strong> Aprovou, o agente manda no grupo ou no privado certo e registra que mandou.
+   Ajustou, ele manda o texto ajustado. Descartou, nada sai</li>
 </ol>
 <h2>O que o agente faz em cada etapa</h2>
 <table>
@@ -62,7 +62,7 @@ pro aluno sem uma pessoa aprovar.</strong></p>
 </tr>
 <tr>
 <td>Acompanhamento</td>
-<td>Lê os grupos liberados, aponta pergunta sem resposta e propõe um rascunho</td>
+<td>Lê os grupos liberados, aponta pergunta sem resposta, escreve a resposta e manda depois da aprovação</td>
 </tr>
 <tr>
 <td>Ranking</td>
@@ -78,7 +78,7 @@ pro aluno sem uma pessoa aprovar.</strong></p>
 </tr>
 </tbody>
 </table>
-<p><strong>Fica pra depois:</strong> envio automático, rotinas (ranking mensal, agenda dos mentores, publicação de aula),
+<p><strong>Fica pra depois:</strong> envio sem aprovação (só quando os números mostrarem que dá, ver pergunta 8), rotinas (ranking mensal, agenda dos mentores, publicação de aula),
 renovação e Confraria.</p>
 <h2>As entregas, com data</h2>
 <table>
@@ -107,13 +107,13 @@ renovação e Confraria.</p>
 </tr>
 <tr>
 <td>4</td>
-<td>Fila de decisões com rascunhos, em modo sombra</td>
+<td>Fila de decisões com a mensagem pronta e <strong>envio pelo WhatsApp depois da aprovação</strong></td>
 <td><strong>18/12</strong></td>
 </tr>
 <tr>
 <td>5</td>
-<td>Envio aprovado pelo WhatsApp e as primeiras rotinas</td>
-<td><strong>janeiro/2027</strong>, depois que o modo sombra passar</td>
+<td>Primeiras rotinas (ranking mensal, agenda dos mentores)</td>
+<td><strong>janeiro/2027</strong></td>
 </tr>
 </tbody>
 </table>
@@ -156,29 +156,32 @@ publica.</p>
 <ul>
 <li><strong>Como:</strong> um programa no nosso servidor, ligado 24h, funciona como um WhatsApp Web. Ele usa um <strong>chip só do
   agente</strong>, que entra nos grupos de alunos. Ele lê <strong>só os grupos liberados</strong> e manda as mensagens pra Central.
-  Até a entrega 5, ele não envia nada</li>
+  Ele <strong>só envia o que foi aprovado</strong> na Central, a partir da entrega 4</li>
 <li><strong>Por que não o WhatsApp oficial da Meta:</strong> ele não entra em grupo que já existe e aceita no máximo 8 pessoas
   por grupo. Teríamos que desmontar os grupos de alunos</li>
 <li><strong>Risco:</strong> o WhatsApp pode bloquear número que usa programa não oficial. O risco vem quase todo de <strong>enviar</strong>
-  muito, não de ler. Por isso a Fase 1 só lê. E por isso o chip é do agente, nunca o número da empresa</li>
+  muito, não de ler. Como cada envio passa por uma pessoa, o volume fica baixo e no ritmo de um humano. E o chip
+  é do agente, nunca o número da empresa</li>
 <li><strong>Plano B:</strong><ul>
 <li><strong>Se o programa parar:</strong> a Central avisa ("sem leitura há 2 horas"). Enquanto isso, dá pra exportar a
 conversa pelo próprio WhatsApp e a Central lê o arquivo</li>
 <li><strong>Se o número for bloqueado:</strong> troca o chip e adiciona o número novo nos grupos. As mensagens já lidas ficam
 guardadas na Central. Antes de ligar, conferir que todo grupo tem um segundo administrador da Pataro</li>
-<li><strong>Quando o envio ligar:</strong> mensagens espaçadas, só o que foi aprovado, com limite por hora</li>
+<li><strong>No envio:</strong> mensagens espaçadas, só o que foi aprovado, com limite por hora</li>
 </ul>
 </li>
 </ul>
-<h3>8. Quanto tempo de modo sombra, e como medir?</h3>
-<p><strong>4 semanas ou 100 sugestões</strong>, o que vier por último. Em cada sugestão da fila, vocês marcam "mandaria assim",
-"mandaria com ajuste" ou "não mandaria". O envio liga quando:</p>
+<h3>8. Como saber se o agente está bom?</h3>
+<p>Toda mensagem da fila termina de um jeito: <strong>aprovada sem mexer</strong>, <strong>ajustada</strong> ou <strong>descartada</strong>. A Central conta
+isso por semana. Depois de <strong>4 semanas ou 100 mensagens</strong>, o que vier por último, olhamos:</p>
 <ul>
-<li><strong>80% ou mais</strong> caírem nas duas primeiras</li>
-<li><strong>nenhuma</strong> mensagem tiver ido pro grupo errado</li>
-<li><strong>nenhum</strong> dado pessoal tiver aparecido</li>
+<li><strong>80% ou mais</strong> aprovadas sem mexer ou com ajuste pequeno</li>
+<li><strong>nenhuma</strong> mensagem pro grupo errado</li>
+<li><strong>nenhum</strong> dado pessoal aparecendo</li>
 </ul>
-<p>Se não bater, ajusto o agente e contamos mais 2 semanas.</p>
+<p>Batendo os três, dá pra conversar sobre o próximo passo: deixar o agente mandar sozinho os casos mais simples
+(como confirmação de recebimento). Se não bater, ajusto o agente e contamos mais 2 semanas. Até lá, tudo continua
+passando pela aprovação.</p>
 <h3>9. Quanto tempo leva cada parte?</h3>
 <p>Está na tabela das entregas: uma a cada 1 ou 2 semanas, comigo sozinho no código. Se alguma informação não
 chegar a tempo (lista dos grupos, notas das calls), a entrega sai sem ela e a informação entra na seguinte.</p></body></html>

@@ -10,8 +10,8 @@ que já está no ar.
 
 ## O que é a Fase 1
 
-A Fase 1 é **semiautomática**: o agente **enxerga** tudo sobre cada aluno e **sugere** o que fazer. **Nada sai
-pro aluno sem uma pessoa aprovar.**
+A Fase 1 é **semiautomática**: o agente **enxerga** tudo sobre cada aluno, **escreve** a mensagem e, **depois que
+uma pessoa aprova na Central**, ele mesmo **manda** pelo WhatsApp. Nada sai pro aluno sem aprovação.
 
 **Na prática, pra vocês:**
 
@@ -19,10 +19,10 @@ pro aluno sem uma pessoa aprovar.**
    plano de ação (o que fez, o que atrasou, o que parou), o Raio-X, o ranking e o que ele anda falando nos grupos
 2. **Cor de saúde com o motivo.** Cada ficha diz verde, amarelo ou vermelho e por quê. Exemplo: "amarelo: 3
    cartões parados há 12 dias e não aparece no grupo desde 02/12"
-3. **Fila de decisões.** Mostra quem precisa de quê, com a prova e um rascunho de mensagem. Vocês aprovam,
-   ajustam ou descartam
-4. **Modo sombra nas primeiras semanas.** O agente sugere e vocês marcam se mandariam aquilo. O envio pelo
-   WhatsApp só liga depois que essa comparação passar (ver pergunta 8)
+3. **Fila de decisões.** Mostra quem precisa de quê, com a prova e a mensagem pronta. Vocês aprovam, ajustam o
+   texto ou descartam
+4. **Envio depois da aprovação.** Aprovou, o agente manda no grupo ou no privado certo e registra que mandou.
+   Ajustou, ele manda o texto ajustado. Descartou, nada sai
 
 ## O que o agente faz em cada etapa
 
@@ -32,12 +32,12 @@ pro aluno sem uma pessoa aprovar.**
 | Venda | Lê o grupo Vendas, abre a ficha do aluno e propõe a confirmação no grupo |
 | Boas-vindas | Lê as respostas do formulário e liga os sócios ao escritório |
 | Raio-X e plano de ação | Lê direto dos Planos de Ação (é nosso sistema, mesmo banco) |
-| Acompanhamento | Lê os grupos liberados, aponta pergunta sem resposta e propõe um rascunho |
+| Acompanhamento | Lê os grupos liberados, aponta pergunta sem resposta, escreve a resposta e manda depois da aprovação |
 | Ranking | Lê a planilha do mês e marca quem caiu |
 | Grupos | Avisa em privado quando alguém quebra regra. Nunca age sobre o membro |
 | Cancelamento, reclamação, dinheiro | Só registra e avisa. Quem resolve é uma pessoa |
 
-**Fica pra depois:** envio automático, rotinas (ranking mensal, agenda dos mentores, publicação de aula),
+**Fica pra depois:** envio sem aprovação (só quando os números mostrarem que dá, ver pergunta 8), rotinas (ranking mensal, agenda dos mentores, publicação de aula),
 renovação e Confraria.
 
 ## As entregas, com data
@@ -47,8 +47,8 @@ renovação e Confraria.
 | 1 | Central no ar com login (✅ desde 17/11) e uma ficha real aberta com os dados da planilha de alunos | **20/11** |
 | 2 | Call, grupo Vendas e plano de ação aparecendo na ficha | **02/12** |
 | 3 | Raio-X, ranking e grupos gerando avisos, e a cor de saúde com motivo | **09/12** |
-| 4 | Fila de decisões com rascunhos, em modo sombra | **18/12** |
-| 5 | Envio aprovado pelo WhatsApp e as primeiras rotinas | **janeiro/2027**, depois que o modo sombra passar |
+| 4 | Fila de decisões com a mensagem pronta e **envio pelo WhatsApp depois da aprovação** | **18/12** |
+| 5 | Primeiras rotinas (ranking mensal, agenda dos mentores) | **janeiro/2027** |
 
 Até 23/11 o tempo é dividido com o agente de contratos e o SDR. A partir de 24/11, o CS fica com a maior parte
 da semana.
@@ -101,27 +101,30 @@ publica.
 
 - **Como:** um programa no nosso servidor, ligado 24h, funciona como um WhatsApp Web. Ele usa um **chip só do
   agente**, que entra nos grupos de alunos. Ele lê **só os grupos liberados** e manda as mensagens pra Central.
-  Até a entrega 5, ele não envia nada
+  Ele **só envia o que foi aprovado** na Central, a partir da entrega 4
 - **Por que não o WhatsApp oficial da Meta:** ele não entra em grupo que já existe e aceita no máximo 8 pessoas
   por grupo. Teríamos que desmontar os grupos de alunos
 - **Risco:** o WhatsApp pode bloquear número que usa programa não oficial. O risco vem quase todo de **enviar**
-  muito, não de ler. Por isso a Fase 1 só lê. E por isso o chip é do agente, nunca o número da empresa
+  muito, não de ler. Como cada envio passa por uma pessoa, o volume fica baixo e no ritmo de um humano. E o chip
+  é do agente, nunca o número da empresa
 - **Plano B:**
   - **Se o programa parar:** a Central avisa ("sem leitura há 2 horas"). Enquanto isso, dá pra exportar a
     conversa pelo próprio WhatsApp e a Central lê o arquivo
   - **Se o número for bloqueado:** troca o chip e adiciona o número novo nos grupos. As mensagens já lidas ficam
     guardadas na Central. Antes de ligar, conferir que todo grupo tem um segundo administrador da Pataro
-  - **Quando o envio ligar:** mensagens espaçadas, só o que foi aprovado, com limite por hora
+  - **No envio:** mensagens espaçadas, só o que foi aprovado, com limite por hora
 
-### 8. Quanto tempo de modo sombra, e como medir?
+### 8. Como saber se o agente está bom?
 
-**4 semanas ou 100 sugestões**, o que vier por último. Em cada sugestão da fila, vocês marcam "mandaria assim",
-"mandaria com ajuste" ou "não mandaria". O envio liga quando:
-- **80% ou mais** caírem nas duas primeiras
-- **nenhuma** mensagem tiver ido pro grupo errado
-- **nenhum** dado pessoal tiver aparecido
+Toda mensagem da fila termina de um jeito: **aprovada sem mexer**, **ajustada** ou **descartada**. A Central conta
+isso por semana. Depois de **4 semanas ou 100 mensagens**, o que vier por último, olhamos:
+- **80% ou mais** aprovadas sem mexer ou com ajuste pequeno
+- **nenhuma** mensagem pro grupo errado
+- **nenhum** dado pessoal aparecendo
 
-Se não bater, ajusto o agente e contamos mais 2 semanas.
+Batendo os três, dá pra conversar sobre o próximo passo: deixar o agente mandar sozinho os casos mais simples
+(como confirmação de recebimento). Se não bater, ajusto o agente e contamos mais 2 semanas. Até lá, tudo continua
+passando pela aprovação.
 
 ### 9. Quanto tempo leva cada parte?
 
