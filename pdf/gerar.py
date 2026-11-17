@@ -1,7 +1,12 @@
-"""Gera pdf/plano-central.pdf a partir de plano-central.md (usa o Edge em modo headless)."""
-import re, subprocess, pathlib, markdown
+"""Gera pdf/<nome>.pdf a partir de <nome>.md (usa o Edge em modo headless).
+   python pdf/gerar.py              → plano-central
+   python pdf/gerar.py cs-respostas → cs-respostas
+"""
+import re, subprocess, pathlib, sys, markdown
 aqui = pathlib.Path(__file__).resolve().parent
-src = (aqui.parent / "plano-central.md").read_text(encoding="utf-8")
+nome = sys.argv[1] if len(sys.argv) > 1 else "plano-central"
+src = (aqui.parent / f"{nome}.md").read_text(encoding="utf-8")
+titulo = src.splitlines()[0].lstrip("# ").strip()
 out = []
 for l in src.split("\n"):
     # python-markdown pede linha em branco antes de lista e recuo de 4 nas sublistas
@@ -26,9 +31,9 @@ tr:nth-child(even) td{background:#f7f8fa}
 ul,ol{padding-left:16pt;margin:4pt 0 8pt} li{margin:2pt 0}
 p{margin:5pt 0}
 """
-html = aqui / "plano-central.html"
-html.write_text(f"<!doctype html><html lang=pt-BR><head><meta charset=utf-8><title>Central · plano de ação</title><style>{css}</style></head><body>{body}</body></html>", encoding="utf-8")
+html = aqui / f"{nome}.html"
+html.write_text(f"<!doctype html><html lang=pt-BR><head><meta charset=utf-8><title>{titulo}</title><style>{css}</style></head><body>{body}</body></html>", encoding="utf-8")
 edge = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 subprocess.run([edge, "--headless=new", "--disable-gpu", "--no-pdf-header-footer",
-                f"--print-to-pdf={aqui / 'plano-central.pdf'}", html.as_uri()], capture_output=True)
-print("ok", aqui / "plano-central.pdf")
+                f"--print-to-pdf={aqui / (nome + '.pdf')}", html.as_uri()], capture_output=True)
+print("ok", aqui / f"{nome}.pdf")
