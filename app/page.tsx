@@ -5,6 +5,7 @@ import { exigirUsuario } from '@/lib/sessao'
 import { alternarParada, listarAgentes } from '@/lib/agentes'
 import { pode } from '@/lib/papeis'
 import { listarVerbetes, resumoPorTema, situacao } from '@/lib/cerebro'
+import { Onda, type EstadoOnda } from './onda'
 
 const STATUS: Record<string, string> = { no_ar: 'No ar', em_construcao: 'Em construção', parado: 'Parado' }
 
@@ -33,14 +34,35 @@ export default async function Agentes() {
     `SELECT count(*)::int AS n FROM auditoria WHERE acao = 'cerebro.buscar' AND quando > now() - interval '7 days'`)
   const consultas = c?.n ?? 0
 
+  const estado = (a: (typeof agentes)[number]): EstadoOnda => (a.parado ? 'parado' : (a.status as EstadoOnda))
+  const noAr = agentes.filter((a) => a.status === 'no_ar' && !a.parado).length
+
   return (
     <>
-      <h1>Agentes</h1>
-      <p className="sub">
-        Todos os agentes da Pataro num lugar só. {pendentes > 0
-          ? <><Link href="/fila">{pendentes} {pendentes === 1 ? 'item espera' : 'itens esperam'} aprovação</Link>.</>
-          : 'Nada esperando aprovação.'}
-      </p>
+      <section className="heroi">
+        <div>
+          <span className="sobrancelha">Central Pataro</span>
+          <h1>Os agentes da Pataro, <em>num lugar só</em></h1>
+          <p className="sub">
+            Cada um com função, dono e prazo. Nada sai pra fora sem uma pessoa aprovar.{' '}
+            {pendentes > 0
+              ? <Link href="/fila">{pendentes} {pendentes === 1 ? 'item espera' : 'itens esperam'} aprovação.</Link>
+              : 'Nada esperando aprovação.'}
+          </p>
+        </div>
+        <div className="time" aria-label={`${noAr} de ${agentes.length} agentes no ar`}>
+          <div className="faixa-ondas">
+            {agentes.map((a) => (
+              <span key={a.id} className={`tile ${estado(a)}`} title={`${a.nome}: ${a.parado ? 'parado' : STATUS[a.status]}`}>
+                <Onda id={a.id} estado={estado(a)} tamanho={44} />
+              </span>
+            ))}
+          </div>
+          <div className="contagem"><b>{noAr}</b> de {agentes.length} no ar</div>
+          <div className="barra"><span style={{ width: `${agentes.length ? (noAr / agentes.length) * 100 : 0}%` }} /></div>
+        </div>
+      </section>
+
       <Link href="/cerebro" className="faixa-cerebro">
         <span className="nucleo" aria-hidden />
         <span className="faixa-texto">
@@ -57,21 +79,20 @@ export default async function Agentes() {
         <span className="faixa-ir">Abrir →</span>
       </Link>
 
-      <div className="cartoes">
+      <div className="cartoes agentes">
         {agentes.map((a) => {
           const decididos = (a.aprovados_semana ?? 0) + (a.ajustados_semana ?? 0) + (a.descartados_semana ?? 0)
           return (
-            <div className="cartao" key={a.id}>
-              <div className="item-topo">
-                <span className={`etiqueta ${a.parado ? 'parado' : a.status}`}>
-                  {a.parado ? 'Parado pelo botão' : STATUS[a.status]}
-                </span>
-                {a.prazo && <span className="mudo">prazo {a.prazo}</span>}
+            <article className={`cartao agente ${estado(a)}`} key={a.id}>
+              <div className="agente-cabeca">
+                <span className="avatar"><Onda id={a.id} estado={estado(a)} tamanho={46} /></span>
+                <div>
+                  <h3>{a.nome}</h3>
+                  <span className="mudo">Dono: {a.dono}</span>
+                </div>
               </div>
-              <h3>{a.nome}</h3>
-              {a.funcao && <div className="funcao">{a.funcao}</div>}
-              <div className="mudo">Dono: {a.dono} · última execução: {quando(a.ultima_execucao)}</div>
-              {a.descricao && <p style={{ fontSize: 14, margin: '8px 0 0' }}>{a.descricao}</p>}
+              {a.funcao && <p className="lema">{a.funcao}</p>}
+              {a.descricao && <p className="descricao">{a.descricao}</p>}
               {a.habilidades?.length > 0 && (
                 <div className="habilidades">
                   {a.habilidades.map((h) => <span key={h} className={h === 'Buscar no Cérebro' ? 'cerebro' : ''}>{h}</span>)}
@@ -79,8 +100,15 @@ export default async function Agentes() {
               )}
               <div className="numeros">
                 <span><b>{a.pendentes ?? 0}</b>na fila</span>
-                <span><b>{decididos ? `${a.aprovados_semana}/${decididos}` : '—'}</b>aprovados sem mexer (7d)</span>
+                <span title="Aprovados sem mexer nos últimos 7 dias"><b>{decididos ? `${a.aprovados_semana}/${decididos}` : '—'}</b>aprovados (7d)</span>
                 <span><b>{a.erros_semana ?? 0}</b>erros (7d)</span>
+              </div>
+              <div className="rodape-agente">
+                <span className={`situacao ${estado(a)}`}>
+                  {a.parado ? 'Parado pelo botão' : a.status === 'no_ar' ? '✓ No ar' : STATUS[a.status]}
+                  {a.prazo && a.status === 'em_construcao' && <span className="mudo"> · prazo {a.prazo}</span>}
+                </span>
+                <span className="mudo">{a.ultima_execucao ? `rodou ${quando(a.ultima_execucao)}` : 'nunca rodou'}</span>
               </div>
               {pode(u.papel, 'parar_agente') && a.status !== 'em_construcao' && (
                 <form action={pararOuRetomar} style={{ marginTop: 12 }}>
@@ -90,7 +118,7 @@ export default async function Agentes() {
                   </button>
                 </form>
               )}
-            </div>
+            </article>
           )
         })}
       </div>

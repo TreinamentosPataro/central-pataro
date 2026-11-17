@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { Inter, Instrument_Serif } from 'next/font/google'
 import './globals.css'
 import { usuarioAtual } from '@/lib/sessao'
 import { getBanco } from '@/lib/db'
@@ -13,6 +14,9 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic'
 
+const sans = Inter({ subsets: ['latin'], variable: '--f-sans', display: 'swap' })
+const serifa = Instrument_Serif({ subsets: ['latin'], weight: '400', style: 'italic', variable: '--f-serifa', display: 'swap' })
+
 export default async function Layout({ children }: { children: React.ReactNode }) {
   const usuario = await usuarioAtual()
   let pendentes = 0
@@ -22,7 +26,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
     pendentes = r?.n ?? 0
   }
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" className={`${sans.variable} ${serifa.variable}`}>
       <body>
         {usuario && (
           <header className="topo">
