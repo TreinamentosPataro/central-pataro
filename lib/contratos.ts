@@ -54,6 +54,8 @@ export interface Conferencia {
 
 /** O quadro de pagamento que vem de exemplo na minuta. Se o contrato chegar igual, o Bruno esqueceu de trocar. */
 export const EXEMPLO_MINUTA = { valor: 'R$ 35.000,00', vencimentos: 'Pago integral cartão no dia 08/09/2026' }
+/** Lista de opções que vem na minuta, sem escolher (normalizada: maiúscula, sem acento e pontuação). */
+const OPCOES_MINUTA = ['PIX CARTAO OU BOLETO BANCARIO']
 
 // ---------- leitura do HTML exportado pelo Google Docs ----------
 
@@ -155,6 +157,9 @@ function rotuloDaCelula(celula: string): { campo: keyof Contratante; valor: stri
 export function contratantesDo(doc: DocContrato): Contratante[] {
   const lista: Contratante[] = []
   for (const tabela of doc.tabelas) {
+    // a tabela da contratada (RAZÃO SOCIAL) também tem ENDEREÇO, CEP…: se o campo do cliente está em branco,
+    // não pode herdar o da Pataro
+    if (tabela.some((l) => l.some((c) => sem(c).startsWith('RAZAO SOCIAL')))) continue
     for (const linha of tabela) {
       for (const celula of linha) {
         const r = rotuloDaCelula(celula)
@@ -213,6 +218,10 @@ export function lerReais(t: string): number | null {
 }
 
 const UFS = 'AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ')
+const ESTADOS = ['ACRE', 'ALAGOAS', 'AMAPA', 'AMAZONAS', 'BAHIA', 'CEARA', 'DISTRITO FEDERAL', 'ESPIRITO SANTO', 'GOIAS',
+  'MARANHAO', 'MATO GROSSO', 'MATO GROSSO DO SUL', 'MINAS GERAIS', 'PARA', 'PARAIBA', 'PARANA', 'PERNAMBUCO', 'PIAUI',
+  'RIO DE JANEIRO', 'RIO GRANDE DO NORTE', 'RIO GRANDE DO SUL', 'RONDONIA', 'RORAIMA', 'SANTA CATARINA', 'SAO PAULO',
+  'SERGIPE', 'TOCANTINS']
 
 function vigencias(texto: string): { clausula: string; meses: number }[] {
   const achar = (rotulo: string, re: RegExp) => {
@@ -243,6 +252,7 @@ export function conferirContrato(doc: DocContrato): Conferencia {
     if (!c.endereco) falta.push(`endereço${quem}`)
     if (!c.bairro) falta.push(`bairro${quem}`)
     if (!c.cidadeEstado) falta.push(`cidade e estado${quem}`)
+    else if (ESTADOS.includes(sem(c.cidadeEstado))) falta.push(`cidade${quem} (só o estado foi preenchido)`)
     else if (!UFS.some((uf) => new RegExp(`\\b${uf}\\b`).test(sem(c.cidadeEstado)))) falta.push(`estado (UF) na cidade${quem}`)
     if (!c.cep) falta.push(`CEP${quem}`)
     else if (digitos(c.cep).length !== 8) falta.push(`CEP${quem} incompleto`)
@@ -260,11 +270,16 @@ export function conferirContrato(doc: DocContrato): Conferencia {
     const valor = lerReais(pag.valor)
     if (!valor) falta.push('valor do contrato')
     if (!pag.forma) falta.push('forma de pagamento')
-    parcelas = Number(digitos(pag.parcelas)) || null
-    if (!parcelas) falta.push('quantidade de parcelas')
+    // texto livre ("1 parcela no pix e 10 no boleto", "pago integralmente no cartão"): vale o primeiro número
+    parcelas = Number(pag.parcelas.match(/\d+/)?.[0]) || null
+    if (!pag.parcelas.trim()) falta.push('quantidade de parcelas')
     if (!pag.vencimentos) falta.push('vencimentos')
     const quadro = [pag.valor, pag.forma, pag.parcelas, pag.vencimentos, pag.observacoes].join(' ')
-    if (/[[\]]/.test(quadro)) falta.push('o quadro de pagamento ainda tem opção entre colchetes da minuta (ex.: [Cartão de crédito])')
+    // o comercial costuma escrever a forma escolhida entre colchetes ("[PIX]", "[Boleto]"): isso vale.
+    // Trava só se sobrou a lista de opções da minuta
+    if ([...quadro.matchAll(/\[([^\]]*)\]/g)].some((m) => OPCOES_MINUTA.includes(sem(m[1]).replace(/[^A-Z ]/g, '').replace(/\s+/g, ' ')))) {
+      falta.push('a forma de pagamento ainda está com as opções da minuta ([PIX, CARTÃO OU BOLETO BANCÁRIO])')
+    }
     if (lerReais(pag.valor) === lerReais(EXEMPLO_MINUTA.valor) && sem(pag.vencimentos).includes(sem(EXEMPLO_MINUTA.vencimentos).slice(0, 30))) {
       falta.push('o quadro de pagamento está igual ao exemplo da minuta (R$ 35.000, pago em 08/09/2026)')
     }
@@ -285,7 +300,7 @@ export function conferirContrato(doc: DocContrato): Conferencia {
   }
   if (meses && meses !== 12) avisos.push(`vigência de ${meses} meses (diferente do padrão de 12): confirmar que foi combinado`)
 
-  if (doc.marcados.length) falta.push(`sobrou marcação amarela no documento (${doc.marcados.length} ${doc.marcados.length === 1 ? 'trecho' : 'trechos'})`)
+  // amarelo NÃO trava: o comercial pinta de amarelo os campos que preenche (visto nos 16 contratos reais em 17/11)
   if (/_{4,}\s*de\s*_{4,}/.test(doc.texto)) avisos.push('a data do fim do contrato está em branco (___ de ___)')
 
   const nome = contratantes[0]?.nome?.split(/\s+/)[0] || null

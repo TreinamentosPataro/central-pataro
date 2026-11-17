@@ -46,7 +46,8 @@ function contrato(o: Opcoes = {}): string {
     ${tabelaContratante(v(o.nome, 'Maria Exemplo da Silva'))}
     ${o.segundo ? tabelaContratante('Jo&atilde;o Exemplo Souza') : ''}
     <p><span class="c1">CONTRATADA:</span></p>
-    <table><tbody><tr><td><p><span>RAZ&Atilde;O SOCIAL / NOME FANTASIAPATARO TREINAMENTOS E DESENVOLVIMENTOS LTDA.</span></p></td></tr></tbody></table>
+    <table><tbody><tr><td><p><span>RAZ&Atilde;O SOCIAL / NOME FANTASIAPATARO TREINAMENTOS E DESENVOLVIMENTOS LTDA.</span></p></td></tr>
+      <tr>${cel('ENDERE&Ccedil;O (RUA, AV., ESTRADA e N&ordm;)&nbsp;', 'Endere&ccedil;o da Pataro, 1')}${cel('E-MAIL&nbsp;', 'contato@pataro-exemplo.com.br')}</tr></tbody></table>
     <p><span>1.1. O presente instrumento tem por objeto a compra de Infoproduto pela CONTRATANTE, com servi&ccedil;o de acompanhamento por ${meses} (doze) meses</span></p>
     <p><span>b) 20% referentes aos servi&ccedil;os de suporte, orienta&ccedil;&atilde;o e acompanhamento prestados durante o per&iacute;odo de ${meses} (doze) meses</span></p>
     <p><span>2.6. A parcela correspondente ao acompanhamento ser&aacute; prestada ao longo de ${meses} (doze) meses</span></p>
@@ -104,10 +105,30 @@ describe('agente de contratos · conferência', () => {
 
   it('quadro de pagamento igual ao exemplo da minuta trava', () => {
     const c = conferir({ valor: 'R$ 35.000,00', forma: '[Cartão de credito]', parcelas: '12 PARCELAS', vencimentos: 'Pago integral cartão no dia 08/09/2026,' })
-    expect(c.falta).toEqual(expect.arrayContaining([
-      'o quadro de pagamento está igual ao exemplo da minuta (R$ 35.000, pago em 08/09/2026)',
-      'o quadro de pagamento ainda tem opção entre colchetes da minuta (ex.: [Cartão de crédito])',
-    ]))
+    expect(c.falta).toContain('o quadro de pagamento está igual ao exemplo da minuta (R$ 35.000, pago em 08/09/2026)')
+  })
+
+  it('forma escolhida entre colchetes vale; a lista de opções da minuta trava', () => {
+    expect(conferir({ forma: '[PIX]' }).pronto).toBe(true)
+    expect(conferir({ forma: '[Pix e Boleto]' }).pronto).toBe(true)
+    expect(conferir({ forma: '[PIX, CART&Atilde;O OU BOLETO BANC&Aacute;RIO]' }).falta)
+      .toContain('a forma de pagamento ainda está com as opções da minuta ([PIX, CARTÃO OU BOLETO BANCÁRIO])')
+  })
+
+  it('parcelas em texto livre: vale o primeiro número, e texto sem número não trava', () => {
+    expect(conferir({ parcelas: '1 parcela no pix e 10 parcelas no boleto' }).resumo.parcelas).toBe(1)
+    const integral = conferir({ parcelas: 'Pago integralmente via cart&atilde;o de cr&eacute;dito' })
+    expect(integral.falta).not.toContain('quantidade de parcelas')
+    expect(conferir({ parcelas: '' }).falta).toContain('quantidade de parcelas')
+  })
+
+  it('cidade com só o nome do estado pede a cidade', () => {
+    expect(conferir({ cidade: 'Minas Gerais' }).falta).toContain('cidade (só o estado foi preenchido)')
+  })
+
+  it('campo do cliente em branco não herda o da contratada (Pataro)', () => {
+    const c = conferir({ endereco: '', email: '' })
+    expect(c.falta).toEqual(expect.arrayContaining(['endereço', 'e-mail']))
   })
 
   it('parcelas que não fecham com o valor travam (o agente não corrige, só avisa)', () => {
@@ -123,10 +144,9 @@ describe('agente de contratos · conferência', () => {
     expect(torta.falta.some((f) => f.startsWith('a vigência não bate entre as cláusulas'))).toBe(true)
   })
 
-  it('marcação amarela esquecida trava, sem copiar o texto marcado', () => {
-    const c = conferir({ amarelo: 'CONFIRMAR COM O CLIENTE' })
-    expect(c.falta).toContain('sobrou marcação amarela no documento (1 trecho)')
-    expect(JSON.stringify(c)).not.toContain('CONFIRMAR')
+  it('marcação amarela não trava: o comercial pinta de amarelo o que preenche', () => {
+    const c = conferir({ amarelo: 'R$ 20.000,00' })
+    expect(c.pronto).toBe(true)
   })
 
   it('aviso pro comercial leva só o primeiro nome e o que falta, nunca CPF ou e-mail', () => {

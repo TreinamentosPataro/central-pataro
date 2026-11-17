@@ -3,5 +3,5 @@ import path from 'node:path'
 
 export default defineConfig({
   resolve: { alias: { '@': path.resolve(__dirname) } },
-  test: { environment: 'node', testTimeout: 30000 },
+  test: { environment: 'node', testTimeout: 30000, hookTimeout: 60000 }, // o PGlite demora pra subir com os arquivos rodando juntos
 })
