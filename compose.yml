@@ -12,6 +12,9 @@ services:
     env_file: ../.env
     environment:
       WHATSAPP_URL: http://whatsapp:8080   # rede interna; o WhatsApp não fica exposto na internet
+    volumes:
+      # chave do robô do Google (agente de contratos), fora do git; só leitura dentro do container
+      - ../robo-google.json:/run/segredos/robo-google.json:ro
     ports:
       - "127.0.0.1:3300:3300"   # só a própria VPS enxerga (teste e manutenção)
     networks:
