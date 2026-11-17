@@ -1,0 +1,32 @@
+# Na VPS, em /opt/central/app (o deploy/deploy.sh monta essa pasta a partir do commit). Ao lado: /opt/central/.env.
+# Sai pra internet pelo Caddy do partner-reports (portas 80/443 da VPS): o bloco
+# central.patarotreinamentos.com.br no Caddyfile dele manda pra central-painel:3300, pela rede partner-reports_edge.
+# DNS: registro A central → IP da VPS, nuvem cinza (o Caddy tira o certificado sozinho).
+services:
+  painel:
+    build: .
+    image: central-painel
+    restart: unless-stopped
+    init: true
+    env_file: ../.env
+    ports:
+      - "127.0.0.1:3300:3300"   # só a própria VPS enxerga (teste e manutenção)
+    networks:
+      default: {}
+      proxy:
+        aliases: [central-painel]
+    mem_limit: 512m           # não derruba os outros sites da VPS
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3300/entrar').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+
+networks:
+  proxy:
+    external: true
+    name: partner-reports_edge

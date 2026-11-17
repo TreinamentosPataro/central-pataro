@@ -46,15 +46,22 @@ export function lerToken(token: string | undefined, agora = Date.now()): string 
   }
 }
 
-export async function iniciarSessao(email: string): Promise<void> {
-  const jar = await cookies()
-  jar.set(COOKIE, criarToken(email), {
+/** Nome, valor e opções do cookie de sessão (rotas que devolvem um redirect gravam direto na resposta). */
+export function cookieDeSessao(email: string) {
+  return {
+    name: COOKIE,
+    value: criarToken(email),
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: 'lax' as const,
     secure: process.env.NODE_ENV === 'production',
     path: '/',
     maxAge: DURACAO_S,
-  })
+  }
+}
+
+export async function iniciarSessao(email: string): Promise<void> {
+  const jar = await cookies()
+  jar.set(cookieDeSessao(email))
 }
 
 export async function encerrarSessao(): Promise<void> {

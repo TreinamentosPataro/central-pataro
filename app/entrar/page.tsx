@@ -18,8 +18,9 @@ async function entrarComo(formData: FormData) {
   redirect('/')
 }
 
-export default async function Entrar() {
+export default async function Entrar({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
   if (await usuarioAtual()) redirect('/')
+  const { erro } = await searchParams
   const db = await getBanco()
   const usuarios = await db.query<{ email: string; nome: string; papel: Papel }>(
     `SELECT email, nome, papel FROM usuarios WHERE ativo ORDER BY nome`,
@@ -30,6 +31,7 @@ export default async function Entrar() {
         <div className="marca" style={{ marginBottom: 16 }}>
           <span className="marca-p" aria-hidden>P</span> Central Pataro
         </div>
+        {erro && <p className="aviso">{erro}</p>}
         {MODO_DEV ? (
           <>
             <p className="mudo">Modo de desenvolvimento: escolha quem você é. Em produção, a entrada é pela conta Google liberada.</p>
@@ -44,7 +46,10 @@ export default async function Entrar() {
             ))}
           </>
         ) : (
-          <p>A entrada com a conta Google ainda vai ser ligada (ADR-001). Fale com o Norman.</p>
+          <>
+            <p className="mudo">Entre com a sua conta Google. Só os e-mails liberados entram.</p>
+            <a className="botao ouro" href="/auth/google">Entrar com Google</a>
+          </>
         )}
       </div>
     </div>

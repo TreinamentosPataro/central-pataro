@@ -1,0 +1,8 @@
+node_modules
+.next
+.dados
+.env*
+importacoes
+docs/prints
+pdf
+.git
