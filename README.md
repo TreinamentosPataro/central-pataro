@@ -38,14 +38,20 @@ Painel único dos agentes da Pataro Treinamentos. Foco desde 12/11/2026. O Norma
   respeita o botão de parar, não repete, reserva o item antes de mandar. Sai logo depois da aprovação e numa
   rodada a cada minuto (`instrumentation.ts`). 12 testes em `tests/whatsapp.test.ts`. Testado no PC com o
   Evolution de verdade (`deploy/whatsapp-local.yml`): QR gerado e tela ok
-- **Robô do Google criado:** `agente-contrato@centralpataro.iam.gserviceaccount.com`
+- **Robô do Google ligado:** `agente-contrato@centralpataro.iam.gserviceaccount.com`, APIs do Drive e do Sheets
+  ativadas, pasta Contratos Trilha compartilhada (`CONTRATOS_PASTA_ID=1wk8rUsZHDRKkE0YfdTBAz7hUWjzjrj5l`). Chave no PC em
+  `~/.central/robo-google.json` (fora do git); na VPS ainda não
+- **Teste seco com os 16 contratos reais** (sem gravar nada): a régua estava apertada. Ajustado: marcação amarela
+  não trava (o comercial pinta o que preenche), forma entre colchetes vale ("[PIX]") e só trava a lista da minuta,
+  parcelas em texto livre, campo em branco do cliente não herda o endereço da Pataro, "Minas Gerais" sem cidade pede a
+  cidade. Resultado: 6 prontos, 10 travados por falta de verdade (CEP, bairro, e-mail, telefone em branco; 2 com o
+  quadro igual ao exemplo da minuta, R$ 35 mil em 08/09)
 
 ### Próximos passos (em ordem)
-1. **Robô do Google:** compartilhar com o e-mail acima a pasta **Contratos Trilha** (leitor) e a planilha
-   **Gestão Contratos Trilha** (editor); criar a chave JSON (Conta de serviço → Chaves → Adicionar → JSON), guardar
-   em `/opt/central/robo-google.json` e no `.env` da VPS `GOOGLE_SERVICO_JSON` + `CONTRATOS_PASTA_ID`
-2. **Primeiro teste real**: `npm run agente:contratos` contra o Neon com um contrato de verdade; conferir se o
-   HTML do Docs bate com o que `lib/contratos.ts` espera (rótulo + valor na mesma célula)
+1. **Robô na VPS** (junto com o deploy do WhatsApp): copiar a chave pra `/opt/central/robo-google.json` e pôr no
+   `.env` da VPS `GOOGLE_SERVICO_JSON` + `CONTRATOS_PASTA_ID`. Conferir se a planilha **Gestão Contratos Trilha** foi
+   compartilhada com o robô (editor) e pegar o id dela
+2. **Primeiro contrato novo** (criado a partir de 17/11) passa pela rodada `npm run agente:contratos` e cai na fila
 3. **Registrar na planilha** Gestão Contratos Trilha (ver as colunas antes; contratos.md lista: data da venda,
    comprador, contratante, CPF/CNPJ, e-mail, WhatsApp, forma, valor, detalhe, transação Hotmart)
 4. **Subir o WhatsApp pra VPS** (quando o Henrique pedir): pôr `WHATSAPP_CHAVE` e `WHATSAPP_DB_SENHA` no
