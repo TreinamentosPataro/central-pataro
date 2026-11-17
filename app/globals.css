@@ -100,7 +100,7 @@ input[type=text], input[type=search], textarea, select {
 textarea { min-height: 96px; resize: vertical; }
 input:focus, textarea:focus, select:focus, .botao:focus-visible { outline: 2px solid var(--ouro); outline-offset: 1px; }
 
-.item-fila { background: var(--branco); border: 1px solid var(--linha); border-left: 4px solid var(--ouro); border-radius: var(--raio); padding: 16px; margin-bottom: 12px; }
+.item-fila { background: var(--branco); border: 1px solid var(--linha); border-radius: var(--raio); padding: 18px; box-shadow: var(--sombra); margin-bottom: 12px; }
 .item-topo { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
 .item-fila h3 { margin: 0 0 8px; font-size: 16px; }
 .evidencia { background: var(--papel-2); border-radius: 8px; padding: 10px 12px; font-size: 14px; color: var(--tinta-2); margin-bottom: 10px; white-space: pre-wrap; }
