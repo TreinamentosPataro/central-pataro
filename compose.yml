@@ -2,6 +2,7 @@
 # Sai pra internet pelo Caddy do partner-reports (portas 80/443 da VPS): o bloco
 # central.patarotreinamentos.com.br no Caddyfile dele manda pra central-painel:3300, pela rede partner-reports_edge.
 # DNS: registro A central → IP da VPS, nuvem cinza (o Caddy tira o certificado sozinho).
+# O deploy roda com --env-file ../.env: WHATSAPP_CHAVE e WHATSAPP_DB_SENHA de lá entram nos ${...} abaixo.
 services:
   painel:
     build: .
@@ -9,6 +10,8 @@ services:
     restart: unless-stopped
     init: true
     env_file: ../.env
+    environment:
+      WHATSAPP_URL: http://whatsapp:8080   # rede interna; o WhatsApp não fica exposto na internet
     ports:
       - "127.0.0.1:3300:3300"   # só a própria VPS enxerga (teste e manutenção)
     networks:
@@ -25,6 +28,70 @@ services:
       options:
         max-size: 10m
         max-file: "3"
+
+  # WhatsApp do agente (Evolution API, conexão pelo QR). Chip só do agente, nunca o número da empresa.
+  # Sem porta pra internet: só a Central (rede interna) e a própria VPS (127.0.0.1:3301) falam com ele.
+  whatsapp:
+    image: evoapicloud/evolution-api:v2.3.7
+    restart: unless-stopped
+    depends_on:
+      whatsapp-db:
+        condition: service_healthy
+    environment:
+      SERVER_URL: http://whatsapp:8080
+      AUTHENTICATION_API_KEY: ${WHATSAPP_CHAVE:?falta WHATSAPP_CHAVE no /opt/central/.env}
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://evolution:${WHATSAPP_DB_SENHA:?falta WHATSAPP_DB_SENHA no /opt/central/.env}@whatsapp-db:5432/evolution?schema=public
+      DATABASE_CONNECTION_CLIENT_NAME: central
+      # guarda só a sessão do chip; mensagens e contatos não ficam no servidor do WhatsApp
+      DATABASE_SAVE_DATA_INSTANCE: "true"
+      DATABASE_SAVE_DATA_NEW_MESSAGE: "false"
+      DATABASE_SAVE_MESSAGE_UPDATE: "false"
+      DATABASE_SAVE_DATA_CONTACTS: "false"
+      DATABASE_SAVE_DATA_CHATS: "false"
+      DATABASE_SAVE_DATA_LABELS: "false"
+      DATABASE_SAVE_DATA_HISTORIC: "false"
+      CACHE_REDIS_ENABLED: "false"
+      CACHE_LOCAL_ENABLED: "true"
+      DEL_INSTANCE: "false"
+      CONFIG_SESSION_PHONE_CLIENT: Central Pataro
+      CONFIG_SESSION_PHONE_NAME: Chrome
+      QRCODE_LIMIT: "30"
+      LOG_LEVEL: ERROR,WARN,INFO
+      LOG_BAILEYS: error
+    volumes:
+      - whatsapp_sessao:/evolution/instances
+    ports:
+      - "127.0.0.1:3301:8080"
+    mem_limit: 768m
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  whatsapp-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: ${WHATSAPP_DB_SENHA:?falta WHATSAPP_DB_SENHA no /opt/central/.env}
+      POSTGRES_DB: evolution
+    volumes:
+      - whatsapp_banco:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U evolution -d evolution"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    mem_limit: 256m
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+
+volumes:
+  whatsapp_sessao: {}
+  whatsapp_banco: {}
 
 networks:
   proxy:

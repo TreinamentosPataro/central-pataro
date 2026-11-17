@@ -26,8 +26,8 @@ git -c core.autocrlf=false archive --format=tar HEAD | ssh "$VPS" "
   if [ -d $DIR/app ]; then mv $DIR/app $DIR/app.antigo; fi
   mv $DIR/app.novo $DIR/app
   cd $DIR/app
-  sudo docker compose -p central build
-  sudo docker compose -p central up -d
+  sudo docker compose -p central --env-file ../.env build
+  sudo docker compose -p central --env-file ../.env up -d
   sudo docker image prune -f >/dev/null
 "
 

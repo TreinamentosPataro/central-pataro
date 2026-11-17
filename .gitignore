@@ -8,3 +8,4 @@ next-env.d.ts
 # planilhas e exportações com dado de aluno nunca entram no git
 importacoes/
 .impeccable/
+.tmp/

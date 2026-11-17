@@ -13,7 +13,8 @@
     "db:semear": "tsx --env-file-if-exists=.env.local scripts/semear.ts",
     "importar": "tsx --env-file-if-exists=.env.local scripts/importar.ts",
     "agente:chave": "tsx --env-file-if-exists=.env.local scripts/chave-agente.ts",
-    "agente:contratos": "tsx --env-file-if-exists=.env.local scripts/contratos.ts"
+    "agente:contratos": "tsx --env-file-if-exists=.env.local scripts/contratos.ts",
+    "whatsapp:enviar": "tsx --env-file-if-exists=.env.local scripts/whatsapp-enviar.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.7",

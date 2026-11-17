@@ -1,14 +1,24 @@
 import { exigirUsuario } from '@/lib/sessao'
-import { GRUPOS_INTEGRACAO, NOME_ESTADO } from '@/lib/integracoes'
+import Link from 'next/link'
+import { GRUPOS_INTEGRACAO, NOME_ESTADO, type Integracao } from '@/lib/integracoes'
+import { clienteEvolution, whatsappConfigurado } from '@/lib/whatsapp'
+
+/** O cartão do WhatsApp mostra a conexão de verdade, não a do arquivo. */
+async function comEstadoReal(i: Integracao): Promise<Integracao> {
+  if (i.nome !== 'WhatsApp' || !whatsappConfigurado()) return i
+  const estado = await clienteEvolution().estado()
+  return estado === 'conectado' ? { ...i, estado: 'conectado', nota: 'Chip do agente conectado' } : i
+}
 
 export default async function Integracoes({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   await exigirUsuario()
   const { q = '' } = await searchParams
   const termo = q.trim().toLowerCase()
-  const grupos = GRUPOS_INTEGRACAO
+  const reais = await Promise.all(GRUPOS_INTEGRACAO.map(async (g) => ({ ...g, itens: await Promise.all(g.itens.map(comEstadoReal)) })))
+  const grupos = reais
     .map((g) => ({ ...g, itens: g.itens.filter((i) => !termo || `${i.nome} ${i.para} ${g.nome}`.toLowerCase().includes(termo)) }))
     .filter((g) => g.itens.length)
-  const todos = GRUPOS_INTEGRACAO.flatMap((g) => g.itens)
+  const todos = reais.flatMap((g) => g.itens)
   const conectadas = todos.filter((i) => i.estado === 'conectado').length
 
   return (
@@ -29,8 +39,9 @@ export default async function Integracoes({ searchParams }: { searchParams: Prom
             <span className="pilula">{g.itens.length} {g.itens.length === 1 ? 'ferramenta' : 'ferramentas'}</span>
           </div>
           <div className="integracoes">
-            {g.itens.map((i) => (
-              <div key={i.nome} className="integracao">
+            {g.itens.map((i) => {
+              const conteudo = (
+                <>
                 <span className="logo" style={{ background: i.cor }} aria-hidden>{i.sigla}</span>
                 <span className="integracao-texto">
                   <b>{i.nome}</b>
@@ -38,8 +49,12 @@ export default async function Integracoes({ searchParams }: { searchParams: Prom
                   <small>{i.nota}</small>
                 </span>
                 <span className={`estado-int ${i.estado}`}>{NOME_ESTADO[i.estado]}</span>
-              </div>
-            ))}
+                </>
+              )
+              return i.href
+                ? <Link key={i.nome} href={i.href} className="integracao">{conteudo}</Link>
+                : <div key={i.nome} className="integracao">{conteudo}</div>
+            })}
           </div>
         </section>
       ))}

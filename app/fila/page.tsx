@@ -4,6 +4,9 @@ import { getBanco } from '@/lib/db'
 import { exigirUsuario } from '@/lib/sessao'
 import { decidir, listarFila, type ItemFila } from '@/lib/fila'
 import { pode } from '@/lib/papeis'
+import { enviarAprovados } from '@/lib/enviador'
+import { clienteEvolution, whatsappConfigurado } from '@/lib/whatsapp'
+import { listarDestinos } from '@/lib/destinos'
 
 const ESTADO: Record<string, string> = {
   pendente: 'Esperando', aprovado: 'Aprovado sem mexer', ajustado: 'Aprovado com ajuste',
@@ -35,11 +38,19 @@ async function decidirItem(formData: FormData) {
   } else {
     await decidir(db, u, id, { tipo: 'aprovar' })
   }
+  // aprovado pra um grupo ligado → sai na hora; se o WhatsApp estiver fora, a rodada de cada minuto manda depois
+  if (acao !== 'descartar' && whatsappConfigurado()) {
+    await enviarAprovados(db, clienteEvolution()).catch((e) => console.error('[whatsapp] envio após aprovação:', e))
+  }
   revalidatePath('/fila')
   revalidatePath('/')
 }
 
-function Item({ item, podeAprovar }: { item: ItemFila; podeAprovar: boolean }) {
+interface InfoDestino { nome: string; ligado: boolean }
+
+function Item({ item, podeAprovar, destinos = {} }: { item: ItemFila; podeAprovar: boolean; destinos?: Record<string, InfoDestino> }) {
+  const destino = item.destino ? destinos[item.destino] : undefined
+  const esperandoGrupo = destino && !destino.ligado && (item.estado === 'aprovado' || item.estado === 'ajustado') && !item.resultado
   return (
     <div className="item-fila">
       <div className="item-topo">
@@ -52,7 +63,7 @@ function Item({ item, podeAprovar }: { item: ItemFila; podeAprovar: boolean }) {
       </div>
       <h3>{item.titulo}</h3>
       {item.evidencia && <div className="evidencia"><b>Evidência:</b> {item.evidencia}</div>}
-      {item.destino && <div className="mudo" style={{ marginBottom: 8 }}>Destino: {DESTINO[item.destino] ?? item.destino}</div>}
+      {item.destino && <div className="mudo" style={{ marginBottom: 8 }}>Destino: {DESTINO[item.destino] ?? destino?.nome ?? item.destino}</div>}
 
       {item.estado === 'pendente' && podeAprovar ? (
         <form action={decidirItem}>
@@ -77,6 +88,7 @@ function Item({ item, podeAprovar }: { item: ItemFila; podeAprovar: boolean }) {
             {item.aprovador && <>Decidido por {item.aprovador}. </>}
             {item.motivo && <>Motivo: {item.motivo}. </>}
             {item.resultado && <>Resultado: {item.resultado}.</>}
+            {esperandoGrupo && <>Esperando o grupo ser ligado em <Link href="/integracoes/whatsapp">Integrações → WhatsApp</Link>.</>}
             {item.estado === 'pendente' && !podeAprovar && 'Só o Hoklo ou o Fred aprovam.'}
           </div>
         </>
@@ -91,6 +103,9 @@ export default async function Fila() {
   const pendentes = await listarFila(db, ['pendente'])
   const recentes = (await listarFila(db, ['aprovado', 'ajustado', 'descartado', 'executado', 'falhou'])).slice(0, 20)
   const podeAprovar = pode(u.papel, 'aprovar')
+  const destinos = Object.fromEntries(
+    (await listarDestinos(db)).map((d) => [d.id, { nome: d.nome, ligado: Boolean(d.endereco && d.enviar) }]),
+  )
 
   return (
     <>
@@ -98,11 +113,11 @@ export default async function Fila() {
       <p className="sub">O agente propõe, uma pessoa decide. Nada sai pro aluno sem passar por aqui.</p>
       {pendentes.length === 0
         ? <div className="vazio">Nada esperando decisão.</div>
-        : pendentes.map((i) => <Item key={i.id} item={i} podeAprovar={podeAprovar} />)}
+        : pendentes.map((i) => <Item key={i.id} item={i} podeAprovar={podeAprovar} destinos={destinos} />)}
       {recentes.length > 0 && (
         <>
           <h2>Decididos recentemente</h2>
-          {recentes.map((i) => <Item key={i.id} item={i} podeAprovar={false} />)}
+          {recentes.map((i) => <Item key={i.id} item={i} podeAprovar={false} destinos={destinos} />)}
         </>
       )}
     </>

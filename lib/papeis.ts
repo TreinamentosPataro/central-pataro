@@ -11,11 +11,12 @@ export type Permissao =
   | 'parar_agente'      // botão de parar o executor
   | 'ver_auditoria'
   | 'editar_cerebro'    // escrever no Cérebro (toda edição fica na auditoria)
+  | 'configurar_whatsapp' // ler o QR do chip do agente e ligar grupos na lista permitida (auditado)
 
 const TABELA: Record<Papel, Permissao[]> = {
-  gerente: ['ver_painel', 'ver_restrito', 'aprovar', 'parar_agente', 'ver_auditoria', 'editar_cerebro'],
-  stakeholder: ['ver_painel', 'ver_restrito', 'aprovar', 'parar_agente', 'ver_auditoria', 'editar_cerebro'],
-  executor: ['ver_painel', 'ver_auditoria', 'editar_cerebro'],
+  gerente: ['ver_painel', 'ver_restrito', 'aprovar', 'parar_agente', 'ver_auditoria', 'editar_cerebro', 'configurar_whatsapp'],
+  stakeholder: ['ver_painel', 'ver_restrito', 'aprovar', 'parar_agente', 'ver_auditoria', 'editar_cerebro', 'configurar_whatsapp'],
+  executor: ['ver_painel', 'ver_auditoria', 'editar_cerebro', 'configurar_whatsapp'],
 }
 
 export function pode(papel: Papel | undefined | null, permissao: Permissao): boolean {

@@ -2,7 +2,7 @@
 
 Painel único dos agentes da Pataro Treinamentos. Foco desde 12/11/2026. O Norman é o dono (P0).
 
-## Onde paramos (17/11/2026, fim do dia) — ler primeiro
+## Onde paramos (17/11/2026, tarde) — ler primeiro
 
 **Meta:** entregar tudo até **quinta 19/11 cedo** (sexta 20/11 é feriado e o time não trabalha).
 
@@ -29,19 +29,30 @@ Painel único dos agentes da Pataro Treinamentos. Foco desde 12/11/2026. O Norma
   - `lib/google-servico.ts` + `npm run agente:contratos`: robô do Google lê a pasta. Só contratos criados a partir
     de `CONTRATOS_DESDE` (padrão 2026-11-17), pros antigos não voltarem pra fila
 
+### Feito em 17/11, à tarde
+- **WhatsApp do agente pronto pra ligar** (não está na VPS ainda): Evolution API v2.3.7 + Postgres próprio no
+  `compose.yml` (sem porta pra internet; a Central fala com ele por `http://whatsapp:8080`; guarda só a sessão do
+  chip). Tela **Integrações → WhatsApp** (`app/integracoes/whatsapp/`) mostra o QR, o estado e a lista de
+  **grupos liberados** (tabela `destinos`: a fila guarda só a chave `grupo:comercial`, uma pessoa escolhe o grupo
+  de verdade; "Ler" = lista permitida do CS). Envio em `lib/enviador.ts`: só item aprovado, só destino ligado,
+  respeita o botão de parar, não repete, reserva o item antes de mandar. Sai logo depois da aprovação e numa
+  rodada a cada minuto (`instrumentation.ts`). 12 testes em `tests/whatsapp.test.ts`. Testado no PC com o
+  Evolution de verdade (`deploy/whatsapp-local.yml`): QR gerado e tela ok
+- **Robô do Google criado:** `agente-contrato@centralpataro.iam.gserviceaccount.com`
+
 ### Próximos passos (em ordem)
-1. **Robô do Google** (Henrique cria): Google Cloud → projeto CentralPataro → IAM → Contas de serviço →
-   `agente-contratos`. Compartilhar com o e-mail dele a pasta **Contratos Trilha** (leitor) e a planilha **Gestão
-   Contratos Trilha** (editor). Depois: criar a chave JSON (Claude), guardar em `/opt/central/robo-google.json` e
-   no `.env` da VPS `GOOGLE_SERVICO_JSON` + `CONTRATOS_PASTA_ID` (id da pasta, do link)
+1. **Robô do Google:** compartilhar com o e-mail acima a pasta **Contratos Trilha** (leitor) e a planilha
+   **Gestão Contratos Trilha** (editor); criar a chave JSON (Conta de serviço → Chaves → Adicionar → JSON), guardar
+   em `/opt/central/robo-google.json` e no `.env` da VPS `GOOGLE_SERVICO_JSON` + `CONTRATOS_PASTA_ID`
 2. **Primeiro teste real**: `npm run agente:contratos` contra o Neon com um contrato de verdade; conferir se o
    HTML do Docs bate com o que `lib/contratos.ts` espera (rótulo + valor na mesma célula)
 3. **Registrar na planilha** Gestão Contratos Trilha (ver as colunas antes; contratos.md lista: data da venda,
    comprador, contratante, CPF/CNPJ, e-mail, WhatsApp, forma, valor, detalhe, transação Hotmart)
-4. **WhatsApp do agente no servidor** (Evolution API na VPS, chip só do agente, nunca o número da empresa). Fica
-   pronto esperando o QR. Serve pro aviso do comercial e pro CS
+4. **Subir o WhatsApp pra VPS** (quando o Henrique pedir): pôr `WHATSAPP_CHAVE` e `WHATSAPP_DB_SENHA` no
+   `/opt/central/.env`, `bash deploy/deploy.sh`, `npm run db:migrar` contra o Neon (tabela `destinos`). Depois o
+   Henrique lê o QR com o **chip do agente** e liga o grupo do comercial na tela
 5. **Envio pro ZapSign depois da aprovação**: sem API = Claude fazendo os cliques; com o Equipe = API
-6. **Grupos liberados**: o Henrique está puxando a lista dos grupos de alunos; cadastrar na Central
+6. **Grupos liberados**: com o chip conectado, os grupos aparecem na tela; cadastrar os de alunos lá
 7. **Planilha de alunos** (5 abas, do Hoklo): `npm run importar` → primeira ficha real (entrega 1 do CS)
 8. **Cérebro**: preços, reembolso, metas e tom estão "a preencher" (textos do Fred ou do Hoklo)
 9. **SDR**: aula do Thales (Fase 6) e montar dentro do Claude (prazo 19/11 pro estudo, 23/11 a 1ª versão)

@@ -1,0 +1,42 @@
+# WhatsApp do agente no computador, pra testar a tela do QR sem mexer na VPS:
+#   docker compose -f deploy/whatsapp-local.yml up -d
+# e no .env.local: WHATSAPP_URL=http://localhost:8080 e WHATSAPP_CHAVE=chave-local-de-teste
+# Mesma imagem e mesmas regras do compose.yml (só a sessão do chip é guardada).
+services:
+  whatsapp:
+    image: evoapicloud/evolution-api:v2.3.7
+    depends_on:
+      whatsapp-db:
+        condition: service_healthy
+    environment:
+      SERVER_URL: http://localhost:8080
+      AUTHENTICATION_API_KEY: chave-local-de-teste
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://evolution:local@whatsapp-db:5432/evolution?schema=public
+      DATABASE_CONNECTION_CLIENT_NAME: central
+      DATABASE_SAVE_DATA_INSTANCE: "true"
+      DATABASE_SAVE_DATA_NEW_MESSAGE: "false"
+      DATABASE_SAVE_MESSAGE_UPDATE: "false"
+      DATABASE_SAVE_DATA_CONTACTS: "false"
+      DATABASE_SAVE_DATA_CHATS: "false"
+      DATABASE_SAVE_DATA_LABELS: "false"
+      DATABASE_SAVE_DATA_HISTORIC: "false"
+      CACHE_REDIS_ENABLED: "false"
+      CACHE_LOCAL_ENABLED: "true"
+      CONFIG_SESSION_PHONE_CLIENT: Central Pataro
+      CONFIG_SESSION_PHONE_NAME: Chrome
+      LOG_LEVEL: ERROR,WARN,INFO
+      LOG_BAILEYS: error
+    ports:
+      - "127.0.0.1:8080:8080"
+  whatsapp-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: local
+      POSTGRES_DB: evolution
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U evolution -d evolution"]
+      interval: 5s
+      timeout: 5s
+      retries: 10

@@ -220,3 +220,17 @@ CREATE TABLE IF NOT EXISTS contratos (
   fila_id         uuid REFERENCES fila(id),
   conferido_em    timestamptz NOT NULL DEFAULT now()
 );
+
+-- Destinos: a lista permitida de grupos e números. O item da fila guarda só a chave (ex.: grupo:comercial);
+-- o endereço de verdade (JID do WhatsApp) sai daqui, nunca da IA. Sem endereço ou com envio desligado, nada sai.
+-- "ler" = o agente pode ler aquele grupo (lista permitida do CS); fora da lista, o agente não lê nada.
+CREATE TABLE IF NOT EXISTS destinos (
+  id              text PRIMARY KEY,          -- chave usada na fila: grupo:comercial, grupo:vendas…
+  nome            text NOT NULL,             -- como aparece pra quem aprova
+  canal           text NOT NULL DEFAULT 'whatsapp' CHECK (canal IN ('whatsapp')),
+  endereco        text,                      -- JID do grupo (…@g.us) ou do número (…@s.whatsapp.net)
+  enviar          boolean NOT NULL DEFAULT false,
+  ler             boolean NOT NULL DEFAULT false,
+  atualizado_por  text,
+  atualizado_em   timestamptz NOT NULL DEFAULT now()
+);

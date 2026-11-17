@@ -11,6 +11,7 @@ export interface Integracao {
   para: string
   estado: EstadoIntegracao
   nota: string
+  href?: string     // tela própria da integração
 }
 
 export const GRUPOS_INTEGRACAO: { nome: string; itens: Integracao[] }[] = [
@@ -25,7 +26,7 @@ export const GRUPOS_INTEGRACAO: { nome: string; itens: Integracao[] }[] = [
   {
     nome: 'Mensagens',
     itens: [
-      { nome: 'WhatsApp', sigla: 'W', cor: '#1fa855', para: 'Grupos de alunos', estado: 'falta', nota: 'Falta o chip do agente' },
+      { nome: 'WhatsApp', sigla: 'W', cor: '#1fa855', para: 'Grupos de alunos', estado: 'falta', nota: 'Falta ler o QR com o chip do agente', href: '/integracoes/whatsapp' },
       { nome: 'Gmail', sigla: 'M', cor: '#c5432f', para: 'E-mail', estado: 'depois', nota: 'Depois de 20/11' },
     ],
   },

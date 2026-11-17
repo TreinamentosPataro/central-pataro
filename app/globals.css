@@ -464,3 +464,11 @@ main.sozinho { max-width: 1120px; }
   .org-ramos { flex-direction: column; gap: 28px; }
   .org-ramos::before, .org-ramo::before { display: none; }
 }
+
+/* WhatsApp do agente: QR ao lado das instruções */
+.qr { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; background: var(--branco); border: 1px solid var(--linha); border-radius: var(--raio); padding: 18px; }
+.qr img { border-radius: 8px; border: 1px solid var(--linha); background: #fff; }
+.qr ol { max-width: 340px; line-height: 1.7; }
+a.integracao { text-decoration: none; color: inherit; }
+a.integracao:hover { border-color: var(--ouro); }
+.marcar { display: inline-flex; flex-direction: row; gap: 6px; align-items: center; font-size: 14px; }

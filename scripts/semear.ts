@@ -10,6 +10,7 @@ import { getBanco } from '../lib/db'
 import { auditar } from '../lib/auditoria'
 import { proporItem } from '../lib/fila'
 import { semearCerebro } from '../lib/cerebro'
+import { semearDestinos } from '../lib/destinos'
 
 const db = await getBanco()
 
@@ -55,6 +56,7 @@ for (const [id, nome, funcao, dono, prazo, descricao, habilidades, ordem] of age
 }
 const novosNoCerebro = await semearCerebro(db)
 console.log(`Cérebro: ${novosNoCerebro} verbetes novos.`)
+await semearDestinos(db) // grupos entram sem endereço e com envio desligado
 await auditar(db, { quem: 'sistema', acao: 'semente.rodou', depois: { usuarios: usuarios.length, agentes: agentes.length } })
 console.log(`${usuarios.length} usuários e ${agentes.length} agentes cadastrados.`)
 
