@@ -5,6 +5,7 @@ import './globals.css'
 import { usuarioAtual } from '@/lib/sessao'
 import { getBanco } from '@/lib/db'
 import { NOME_PAPEL } from '@/lib/papeis'
+import { Menu } from './menu'
 
 export const metadata: Metadata = {
   title: 'Central · Pataro',
@@ -28,29 +29,28 @@ export default async function Layout({ children }: { children: React.ReactNode }
   return (
     <html lang="pt-BR" className={`${sans.variable} ${serifa.variable}`}>
       <body>
-        {usuario && (
-          <header className="topo">
-            <div className="topo-dentro">
+        {usuario ? (
+          <div className="casca">
+            <aside className="lateral">
               <Link href="/" className="marca">
-                <span className="marca-p" aria-hidden>P</span> Central
+                <span className="marca-p" aria-hidden>P</span>
+                <span className="marca-nome">Central<small>Pataro</small></span>
               </Link>
-              <nav className="nav" aria-label="Seções">
-                <Link href="/">Agentes</Link>
-                <Link href="/cerebro">Cérebro</Link>
-                <Link href="/fila">
-                  Fila{pendentes > 0 && <span className="contador">{pendentes}</span>}
-                </Link>
-                <Link href="/alunos">Alunos</Link>
-                <Link href="/auditoria">Auditoria</Link>
-              </nav>
-              <div className="quem">
-                <span>{usuario.nome} · {NOME_PAPEL[usuario.papel]}</span>
-                <form action="/sair" method="post"><button type="submit">Sair</button></form>
+              <form action="/cerebro" className="lateral-busca" role="search">
+                <input type="search" name="q" placeholder="Buscar no Cérebro…" aria-label="Buscar no Cérebro" />
+              </form>
+              <Menu pendentes={pendentes} />
+              <div className="lateral-pe">
+                <span className="avatar-pessoa" aria-hidden>{usuario.nome.slice(0, 1)}</span>
+                <span className="quem-texto"><b>{usuario.nome}</b><small>{NOME_PAPEL[usuario.papel]}</small></span>
+                <form action="/sair" method="post"><button type="submit" className="sair">Sair</button></form>
               </div>
-            </div>
-          </header>
+            </aside>
+            <main>{children}</main>
+          </div>
+        ) : (
+          <main className="sozinho">{children}</main>
         )}
-        <main>{children}</main>
       </body>
     </html>
   )

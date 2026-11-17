@@ -31,21 +31,33 @@ export default async function Cerebro({ searchParams }: { searchParams: Promise<
 
   return (
     <>
+      <span className="sobrancelha">Cérebro</span>
       <div className="cabeca">
-        <div>
-          <h1>Cérebro</h1>
-          <p className="sub">
-            O que a Pataro sabe, num lugar só. Todo agente consulta aqui antes de agir.
-            {' '}<b>{emDia}</b> de {verbetes.length} em dia · <b>{verbetes.length - emDia}</b> a preencher ou revisar.
-          </p>
-        </div>
-        {podeEditar && <Link className="botao ouro" href={`/cerebro/novo${tema ? `?tema=${tema}` : ''}`}>Ensinar algo novo</Link>}
+        <h1>O que a Pataro sabe</h1>
+        <span className="mudo">Toda edição fica na <Link href="/auditoria">auditoria</Link>, com o antes e o depois.</span>
       </div>
+      <p className="sub">
+        Cada verbete mostra quem é o dono e quando revisar. Todo agente consulta aqui antes de agir:
+        verbete vazio ou vencido, o agente não responde sozinho.
+      </p>
 
-      <form className="busca" action="/cerebro" role="search">
-        <input type="search" name="q" defaultValue={q} placeholder="Buscar no Cérebro: reembolso, contrato, Trilha…" aria-label="Buscar no Cérebro" />
-        <button className="botao" type="submit">Buscar</button>
+      {podeEditar && (
+        <Link className="ensinar" href={`/cerebro/novo${tema ? `?tema=${tema}` : ''}`}>
+          <span className="atalho-icone ouro" aria-hidden>+</span>
+          <span className="atalho-texto">
+            <b>Ensinar algo novo ao Cérebro</b>
+            <span>Traga um texto ou documento: ele vira um verbete com dono e data de revisão.</span>
+          </span>
+          <span className="seta" aria-hidden>→</span>
+        </Link>
+      )}
+
+      <form className="busca-larga" action="/cerebro" role="search">
+        <input type="search" name="q" defaultValue={q} placeholder="Buscar no Cérebro: título ou trecho (reembolso, contrato, Trilha…)" aria-label="Buscar no Cérebro" />
       </form>
+      <p className="contagem-cerebro">
+        <b>{verbetes.length}</b> verbetes no Cérebro · <b>{emDia}</b> em dia · <b>{verbetes.length - emDia}</b> a preencher ou revisar
+      </p>
 
       {q.trim() && (
         <section className="resultados" aria-live="polite">

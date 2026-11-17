@@ -6,6 +6,7 @@ import { alternarParada, listarAgentes } from '@/lib/agentes'
 import { pode } from '@/lib/papeis'
 import { listarVerbetes, resumoPorTema, situacao } from '@/lib/cerebro'
 import { Onda, type EstadoOnda } from './onda'
+import { AREAS, LEMA } from '@/lib/equipe'
 
 const STATUS: Record<string, string> = { no_ar: 'No ar', em_construcao: 'Em construção', parado: 'Parado' }
 
@@ -15,11 +16,6 @@ async function pararOuRetomar(formData: FormData) {
   const db = await getBanco()
   await alternarParada(db, u, String(formData.get('id')))
   revalidatePath('/')
-}
-
-function quando(iso: string | null): string {
-  if (!iso) return 'nunca rodou'
-  return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 }
 
 export default async function Agentes() {
@@ -34,94 +30,117 @@ export default async function Agentes() {
     `SELECT count(*)::int AS n FROM auditoria WHERE acao = 'cerebro.buscar' AND quando > now() - interval '7 days'`)
   const consultas = c?.n ?? 0
 
-  const estado = (a: (typeof agentes)[number]): EstadoOnda => (a.parado ? 'parado' : (a.status as EstadoOnda))
+  type Ag = (typeof agentes)[number]
+  const estado = (a: Ag): EstadoOnda => (a.parado ? 'parado' : (a.status as EstadoOnda))
   const noAr = agentes.filter((a) => a.status === 'no_ar' && !a.parado).length
+  const porId = new Map(agentes.map((a) => [a.id, a]))
+  const naArea = new Set(AREAS.flatMap((ar) => ar.agentes))
+  const grupos = [
+    ...AREAS.map((ar) => ({ ...ar, lista: ar.agentes.map((id) => porId.get(id)).filter((x): x is Ag => !!x) })),
+    { id: 'outros', nome: 'Outros', lema: 'Ainda sem área', agentes: [], lista: agentes.filter((a) => !naArea.has(a.id)) },
+  ].filter((g) => g.lista.length)
+
+  const Cartao = ({ a }: { a: Ag }) => (
+    <article className={`cartao agente ${estado(a)}`} title={a.descricao ?? undefined}>
+      <div className="agente-cabeca">
+        <span className="avatar"><Onda id={a.id} estado={estado(a)} tamanho={46} /></span>
+        <div>
+          <h3>{a.nome}</h3>
+          <span className="cargo">{a.funcao}</span>
+        </div>
+      </div>
+      <p className="lema">{LEMA[a.id] ?? a.funcao}</p>
+      {a.habilidades?.length > 0 && (
+        <div className="habilidades">
+          {a.habilidades.map((h) => <span key={h} className={h === 'Buscar no Cérebro' ? 'cerebro' : ''}>{h}</span>)}
+        </div>
+      )}
+      <div className="rodape-agente">
+        <span className={`situacao ${estado(a)}`}>
+          {a.parado ? 'Parado pelo botão' : a.status === 'no_ar' ? '✓ No ar' : <>Em construção{a.prazo && <span> · {a.prazo}</span>}</>}
+        </span>
+        {(a.pendentes ?? 0) > 0
+          ? <Link href="/fila" className="na-fila">{a.pendentes} na fila →</Link>
+          : <span className="mudo">{a.dono.split(' ')[0]}</span>}
+      </div>
+      {pode(u.papel, 'parar_agente') && a.status !== 'em_construcao' && (
+        <form action={pararOuRetomar} className="parar">
+          <input type="hidden" name="id" value={a.id} />
+          <button className={`botao ${a.parado ? 'leve' : 'perigo'}`} type="submit">{a.parado ? 'Retomar' : 'Parar execução'}</button>
+        </form>
+      )}
+    </article>
+  )
 
   return (
     <>
       <section className="heroi">
-        <div>
-          <span className="sobrancelha">Central Pataro</span>
-          <h1>Os agentes da Pataro, <em>num lugar só</em></h1>
+        <div className="heroi-texto">
+          <span className="sobrancelha">Pataro 24h</span>
+          <h1>
+            Uma equipe que trabalha <em>enquanto você atende</em>
+            <svg className="heroi-onda" viewBox="0 0 600 60" preserveAspectRatio="none" aria-hidden>
+              <path d="M0 40 C 90 40, 120 18, 210 24 S 360 52, 450 30 S 560 10, 600 22" />
+            </svg>
+          </h1>
           <p className="sub">
-            Cada um com função, dono e prazo. Nada sai pra fora sem uma pessoa aprovar.{' '}
-            {pendentes > 0
-              ? <Link href="/fila">{pendentes} {pendentes === 1 ? 'item espera' : 'itens esperam'} aprovação.</Link>
-              : 'Nada esperando aprovação.'}
+            Cada agente tem função, dono e prazo, e consulta o Cérebro antes de agir. Nada sai pra fora sem uma pessoa aprovar.
           </p>
         </div>
         <div className="time" aria-label={`${noAr} de ${agentes.length} agentes no ar`}>
           <div className="faixa-ondas">
             {agentes.map((a) => (
               <span key={a.id} className={`tile ${estado(a)}`} title={`${a.nome}: ${a.parado ? 'parado' : STATUS[a.status]}`}>
-                <Onda id={a.id} estado={estado(a)} tamanho={44} />
+                <Onda id={a.id} estado={estado(a)} tamanho={40} />
               </span>
             ))}
           </div>
           <div className="contagem"><b>{noAr}</b> de {agentes.length} no ar</div>
-          <div className="barra"><span style={{ width: `${agentes.length ? (noAr / agentes.length) * 100 : 0}%` }} /></div>
+          <div className="barra"><span style={{ width: `${agentes.length ? Math.max(noAr / agentes.length, 0.02) * 100 : 0}%` }} /></div>
         </div>
       </section>
 
-      <Link href="/cerebro" className="faixa-cerebro">
-        <span className="nucleo" aria-hidden />
-        <span className="faixa-texto">
-          <b>Cérebro</b>
-          <span>
-            {emDia} de {verbetes.length} verbetes em dia · {consultas} {consultas === 1 ? 'consulta' : 'consultas'} dos agentes em 7 dias
+      <div className="atalhos">
+        <Link href="/cerebro" className="atalho escuro">
+          <span className="nucleo" aria-hidden />
+          <span className="atalho-texto">
+            <small>Cérebro</small>
+            <b>O que a Pataro sabe</b>
+            <span>{emDia} de {verbetes.length} verbetes em dia · {consultas} {consultas === 1 ? 'consulta' : 'consultas'} dos agentes em 7 dias</span>
           </span>
-        </span>
-        <span className="faixa-temas" aria-hidden>
-          {temas.map((t) => (
-            <span key={t.id} title={t.nome} style={{ '--p': t.verbetes.length ? t.ok / t.verbetes.length : 0 } as React.CSSProperties} />
-          ))}
-        </span>
-        <span className="faixa-ir">Abrir →</span>
-      </Link>
-
-      <div className="cartoes agentes">
-        {agentes.map((a) => {
-          const decididos = (a.aprovados_semana ?? 0) + (a.ajustados_semana ?? 0) + (a.descartados_semana ?? 0)
-          return (
-            <article className={`cartao agente ${estado(a)}`} key={a.id}>
-              <div className="agente-cabeca">
-                <span className="avatar"><Onda id={a.id} estado={estado(a)} tamanho={46} /></span>
-                <div>
-                  <h3>{a.nome}</h3>
-                  <span className="mudo">Dono: {a.dono}</span>
-                </div>
-              </div>
-              {a.funcao && <p className="lema">{a.funcao}</p>}
-              {a.descricao && <p className="descricao">{a.descricao}</p>}
-              {a.habilidades?.length > 0 && (
-                <div className="habilidades">
-                  {a.habilidades.map((h) => <span key={h} className={h === 'Buscar no Cérebro' ? 'cerebro' : ''}>{h}</span>)}
-                </div>
-              )}
-              <div className="numeros">
-                <span><b>{a.pendentes ?? 0}</b>na fila</span>
-                <span title="Aprovados sem mexer nos últimos 7 dias"><b>{decididos ? `${a.aprovados_semana}/${decididos}` : '—'}</b>aprovados (7d)</span>
-                <span><b>{a.erros_semana ?? 0}</b>erros (7d)</span>
-              </div>
-              <div className="rodape-agente">
-                <span className={`situacao ${estado(a)}`}>
-                  {a.parado ? 'Parado pelo botão' : a.status === 'no_ar' ? '✓ No ar' : STATUS[a.status]}
-                  {a.prazo && a.status === 'em_construcao' && <span className="mudo"> · prazo {a.prazo}</span>}
-                </span>
-                <span className="mudo">{a.ultima_execucao ? `rodou ${quando(a.ultima_execucao)}` : 'nunca rodou'}</span>
-              </div>
-              {pode(u.papel, 'parar_agente') && a.status !== 'em_construcao' && (
-                <form action={pararOuRetomar} style={{ marginTop: 12 }}>
-                  <input type="hidden" name="id" value={a.id} />
-                  <button className={`botao ${a.parado ? 'leve' : 'perigo'}`} type="submit">
-                    {a.parado ? 'Retomar' : 'Parar execução'}
-                  </button>
-                </form>
-              )}
-            </article>
-          )
-        })}
+          <span className="faixa-temas" aria-hidden>
+            {temas.map((t) => (
+              <span key={t.id} title={t.nome} style={{ '--p': t.verbetes.length ? t.ok / t.verbetes.length : 0 } as React.CSSProperties} />
+            ))}
+          </span>
+          <span className="seta" aria-hidden>→</span>
+        </Link>
+        <Link href="/fila" className="atalho">
+          <span className="atalho-icone" aria-hidden>{pendentes}</span>
+          <span className="atalho-texto">
+            <small>Aprovações</small>
+            <b>{pendentes ? `${pendentes} ${pendentes === 1 ? 'item espera' : 'itens esperam'} você` : 'Nada esperando'}</b>
+            <span>O agente propõe, uma pessoa decide.</span>
+          </span>
+          <span className="seta" aria-hidden>→</span>
+        </Link>
       </div>
+
+      {grupos.map((g) => {
+        const vivos = g.lista.filter((a) => a.status === 'no_ar' && !a.parado).length
+        return (
+          <section key={g.id} className="area">
+            <div className="area-cabeca">
+              <h2>{g.nome}</h2>
+              <em className="area-lema">{g.lema}</em>
+              <span className="pilula">{g.lista.length} {g.lista.length === 1 ? 'agente' : 'agentes'} · {vivos} no ar</span>
+            </div>
+            <div className="cartoes agentes">
+              {g.lista.map((a) => <Cartao key={a.id} a={a} />)}
+            </div>
+          </section>
+        )
+      })}
       {agentes.length === 0 && <div className="vazio">Nenhum agente cadastrado. Rode <code>npm run db:semear</code>.</div>}
     </>
   )
