@@ -206,3 +206,17 @@ ALTER TABLE agentes ADD COLUMN IF NOT EXISTS funcao text;
 CREATE INDEX IF NOT EXISTS fila_estado_idx ON fila (estado, criado_em);
 CREATE INDEX IF NOT EXISTS auditoria_quando_idx ON auditoria (quando DESC);
 CREATE INDEX IF NOT EXISTS sinais_escritorio_idx ON sinais (escritorio_id, data DESC);
+
+-- Agente de contratos: cada contrato que ele viu na pasta do Drive. Sem dado sensível: só o primeiro nome
+-- e o que falta. CPF, endereço e valores ficam no Drive e no ZapSign.
+CREATE TABLE IF NOT EXISTS contratos (
+  drive_id        text PRIMARY KEY,
+  nome_arquivo    text NOT NULL,
+  versao          text NOT NULL,           -- modifiedTime do Drive: mudou, confere de novo
+  situacao        text NOT NULL CHECK (situacao IN ('travado', 'pronto', 'enviado', 'assinado')),
+  primeiro_nome   text,
+  falta           jsonb NOT NULL DEFAULT '[]'::jsonb,
+  avisos          jsonb NOT NULL DEFAULT '[]'::jsonb,
+  fila_id         uuid REFERENCES fila(id),
+  conferido_em    timestamptz NOT NULL DEFAULT now()
+);

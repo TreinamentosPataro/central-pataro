@@ -10,6 +10,16 @@ const ESTADO: Record<string, string> = {
   descartado: 'Descartado', executado: 'Executado', falhou: 'Falhou',
 }
 
+const TIPO: Record<string, string> = {
+  contrato_pronto: 'contrato pronto', contrato_travado: 'contrato travado',
+  plano_parado: 'plano parado', pergunta_sem_resposta: 'pergunta sem resposta', contrato_novo: 'contrato novo',
+}
+
+const DESTINO: Record<string, string> = {
+  'zapsign:trilha': 'ZapSign · Trilha Previdenciária - Contratos',
+  'grupo:comercial': 'Grupo do comercial (WhatsApp)',
+}
+
 async function decidirItem(formData: FormData) {
   'use server'
   const u = await exigirUsuario('aprovar')
@@ -34,7 +44,7 @@ function Item({ item, podeAprovar }: { item: ItemFila; podeAprovar: boolean }) {
     <div className="item-fila">
       <div className="item-topo">
         <span className={`etiqueta ${item.estado}`}>{ESTADO[item.estado]}</span>
-        <span className="mudo">{item.agente_nome} · {item.tipo}</span>
+        <span className="mudo">{item.agente_nome} · {TIPO[item.tipo] ?? item.tipo.replace(/_/g, ' ')}</span>
         {item.escritorio_id && <Link className="mudo" href={`/alunos/${item.escritorio_id}`}>{item.escritorio_nome}</Link>}
         <span className="mudo" style={{ marginLeft: 'auto' }}>
           {new Date(item.criado_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
@@ -42,7 +52,7 @@ function Item({ item, podeAprovar }: { item: ItemFila; podeAprovar: boolean }) {
       </div>
       <h3>{item.titulo}</h3>
       {item.evidencia && <div className="evidencia"><b>Evidência:</b> {item.evidencia}</div>}
-      {item.destino && <div className="mudo" style={{ marginBottom: 8 }}>Destino: {item.destino}</div>}
+      {item.destino && <div className="mudo" style={{ marginBottom: 8 }}>Destino: {DESTINO[item.destino] ?? item.destino}</div>}
 
       {item.estado === 'pendente' && podeAprovar ? (
         <form action={decidirItem}>
