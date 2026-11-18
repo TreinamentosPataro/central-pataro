@@ -75,7 +75,20 @@ Painel único dos agentes da Pataro Treinamentos. Foco desde 12/11/2026. O Norma
 6. **Grupos de alunos** na lista permitida (tela do WhatsApp, "Ler") quando o chip estiver nos grupos
 7. **Planilha de alunos** (5 abas, do Hoklo): `npm run importar` → primeira ficha real (entrega 1 do CS)
 8. **Cérebro**: preços, reembolso, metas e tom estão "a preencher" (textos do Fred ou do Hoklo)
-9. **SDR**: aula do Thales (Fase 6) e montar dentro do Claude (prazo 19/11 pro estudo, 23/11 a 1ª versão)
+9. **SDR, 1ª versão** ✅ 18/11 (falta deploy): mesma linha dos outros agentes, modo semiautomático.
+   - Mensagem privada no chip do agente → `POST /api/whatsapp/entrada?chave=…` (o Evolution chama pela rede interna;
+     chave sai da `WHATSAPP_CHAVE`, sem segredo novo; avisos ligados sozinhos em `lib/rodada-whatsapp.ts` quando o chip
+     conecta) → tabelas `leads` e `lead_mensagens`. Grupo, status e mensagem nossa ficam de fora
+   - Rodada: skill `/sdr` (`.claude/skills/sdr/`) → `scripts/sdr.ts pendentes` (conversas + instruções + Cérebro em
+     `.tmp/`) → o Claude escreve pelo SPIN (`lib/sdr-instrucoes.ts`) → `scripts/sdr.ts propor` → fila
+   - Aprovado → sai pro número de onde o lead escreveu (`lib/enviador.ts`, destino `lead:<id>`) e entra na conversa.
+     Lead qualificado → resumo pro `grupo:comercial` (Bruno). Preço/desconto na mensagem = recusado. Quem sumiu: puxado
+     de volta depois de 24 h, no máximo 2 vezes. Botão "Parar de falar com esse número" na tela **Leads** (`/leads`)
+   - 13 testes (`tests/sdr.test.ts`). Testado no PC com lead simulado (`npm run sdr -- simular`)
+   - **Conferir depois do deploy:** formato do aviso do Evolution 2.3.7 (`GET /webhook/find/agente` e uma mensagem de
+     teste pro chip), porque o leitor foi escrito pelo formato documentado, sem mensagem real
+   - Falta: chip conectado (item 1), número que o anúncio aponta (Hoklo), 10 conversas reais pra ajustar o tom, nome
+     do agente
 10. **Mandar o PDF do CS pro Hoklo aprovar** (`pdf/cs-respostas.pdf`), se ainda não foi
 
 ### Pra trabalhar no PC

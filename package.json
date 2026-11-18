@@ -14,6 +14,7 @@
     "importar": "tsx --env-file-if-exists=.env.local scripts/importar.ts",
     "agente:chave": "tsx --env-file-if-exists=.env.local scripts/chave-agente.ts",
     "agente:contratos": "tsx --env-file-if-exists=.env.local scripts/contratos.ts",
+    "sdr": "tsx --env-file-if-exists=.env.local scripts/sdr.ts",
     "whatsapp:enviar": "tsx --env-file-if-exists=.env.local scripts/whatsapp-enviar.ts"
   },
   "dependencies": {

@@ -15,6 +15,7 @@ const ESTADO: Record<string, string> = {
 
 const TIPO: Record<string, string> = {
   contrato_pronto: 'contrato pronto', contrato_travado: 'contrato travado',
+  sdr_resposta: 'resposta pro lead', sdr_qualificado: 'lead qualificado',
   plano_parado: 'plano parado', pergunta_sem_resposta: 'pergunta sem resposta', contrato_novo: 'contrato novo',
 }
 
@@ -63,7 +64,9 @@ function Item({ item, podeAprovar, destinos = {} }: { item: ItemFila; podeAprova
       </div>
       <h3>{item.titulo}</h3>
       {item.evidencia && <div className="evidencia"><b>Evidência:</b> {item.evidencia}</div>}
-      {item.destino && <div className="mudo" style={{ marginBottom: 8 }}>Destino: {DESTINO[item.destino] ?? destino?.nome ?? item.destino}</div>}
+      {item.destino && <div className="mudo" style={{ marginBottom: 8 }}>Destino: {item.destino.startsWith('lead:')
+        ? <Link href={`/leads?id=${item.destino.slice(5)}`}>WhatsApp do lead (ver conversa)</Link>
+        : DESTINO[item.destino] ?? destino?.nome ?? item.destino}</div>}
 
       {item.estado === 'pendente' && podeAprovar ? (
         <form action={decidirItem}>

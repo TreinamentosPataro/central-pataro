@@ -234,3 +234,33 @@ CREATE TABLE IF NOT EXISTS destinos (
   atualizado_por  text,
   atualizado_em   timestamptz NOT NULL DEFAULT now()
 );
+
+-- Agente SDR: quem mandou mensagem pro chip do agente (conversa privada, nunca grupo) e a conversa.
+-- O endereço (jid) vem do próprio WhatsApp na mensagem que chegou, nunca da IA. A IA só preenche etapa, faixa e resumo.
+CREATE TABLE IF NOT EXISTS leads (
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  jid             text NOT NULL UNIQUE,      -- pra onde a resposta vai (…@s.whatsapp.net ou …@lid)
+  nome            text,                      -- nome do perfil do WhatsApp
+  situacao        text NOT NULL DEFAULT 'novo'
+                  CHECK (situacao IN ('novo', 'conversando', 'qualificado', 'passado', 'fora_do_perfil', 'encerrado')),
+  etapa           text CHECK (etapa IN ('situacao', 'problema', 'implicacao', 'necessidade')),
+  faixa           text,                      -- faixa de faturamento que o lead disse (até 120 mil, 120 a 500 mil…)
+  pessoas         int,                       -- quantas pessoas no escritório
+  resumo          text,                      -- o que o agente entendeu até aqui (vai pro Bruno)
+  retomadas       int NOT NULL DEFAULT 0,    -- quantas vezes o agente puxou de volta quem sumiu (máximo 2)
+  bloqueado       boolean NOT NULL DEFAULT false,  -- uma pessoa mandou parar de falar com esse número
+  ultima_do_lead  timestamptz,
+  ultima_nossa    timestamptz,
+  criado_em       timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS lead_mensagens (
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  lead_id    uuid NOT NULL REFERENCES leads(id),
+  de         text NOT NULL CHECK (de IN ('lead', 'agente')),
+  texto      text NOT NULL,
+  wa_id      text UNIQUE,                    -- id da mensagem no WhatsApp: o mesmo aviso duas vezes entra uma
+  fila_id    uuid REFERENCES fila(id),       -- resposta nossa: qual item aprovado saiu
+  quando     timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS lead_mensagens_lead_idx ON lead_mensagens (lead_id, quando);

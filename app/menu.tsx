@@ -12,6 +12,7 @@ const ICONES = {
   fila: 'M4 5h12M4 10h12M4 15h7M14 14l2 2 3-4',
   alunos: 'M3 6l7-3 7 3-7 3zM6 8v4c0 1.5 2 3 4 3s4-1.5 4-3V8',
   auditoria: 'M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14M10 6v4l3 2',
+  leads: 'M4 5h12v8H9l-4 3v-3H4z',
 }
 
 function Icone({ nome }: { nome: keyof typeof ICONES }) {
@@ -33,6 +34,7 @@ export function Menu({ pendentes }: { pendentes: number }) {
       { href: '/organograma', nome: 'Organograma', icone: 'organograma' },
       { href: '/integracoes', nome: 'Integrações', icone: 'integracoes' },
       { href: '/alunos', nome: 'Alunos', icone: 'alunos' },
+      { href: '/leads', nome: 'Leads', icone: 'leads' },
     ] },
     { titulo: 'Governança', itens: [
       { href: '/fila', nome: 'Aprovações', icone: 'fila', contador: pendentes },

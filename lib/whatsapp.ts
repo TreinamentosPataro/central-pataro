@@ -7,6 +7,8 @@
  * tabela `destinos` (lib/destinos.ts).
  */
 
+import crypto from 'node:crypto'
+
 export type EstadoConexao = 'conectado' | 'conectando' | 'desconectado' | 'sem_servidor'
 
 export interface GrupoWhatsapp {
@@ -22,6 +24,23 @@ export interface ClienteWhatsapp {
   enviarTexto(para: string, texto: string): Promise<{ id: string | null }>
   grupos(): Promise<GrupoWhatsapp[]>
   desconectar(): Promise<void>
+  /** Pede pro WhatsApp avisar a Central a cada mensagem que chega (agente SDR). */
+  ligarAvisos?(url: string): Promise<void>
+}
+
+/**
+ * Chave da porta de entrada (/api/whatsapp/entrada). Sai da WHATSAPP_CHAVE que já está no .env, então não precisa
+ * de segredo novo; quem não tem a chave do WhatsApp não consegue fingir que é ele.
+ */
+export function chaveEntrada(chave = process.env.WHATSAPP_CHAVE ?? ''): string {
+  return crypto.createHash('sha256').update(`${chave}:entrada-central`).digest('hex').slice(0, 40)
+}
+
+export function conferirChaveEntrada(recebida: string | null): boolean {
+  if (!process.env.WHATSAPP_CHAVE || !recebida) return false
+  const a = Buffer.from(chaveEntrada())
+  const b = Buffer.from(recebida)
+  return a.length === b.length && crypto.timingSafeEqual(a, b)
 }
 
 export function whatsappConfigurado(): boolean {
@@ -98,6 +117,13 @@ export function clienteEvolution(
 
     async desconectar() {
       await chamar('DELETE', `/instance/logout/${nome}`)
+    },
+
+    async ligarAvisos(url) {
+      await garantirInstancia()
+      await chamar('POST', `/webhook/set/${nome}`, {
+        webhook: { enabled: true, url, byEvents: false, base64: false, events: ['MESSAGES_UPSERT'] },
+      })
     },
   }
 }
