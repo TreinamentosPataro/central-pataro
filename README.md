@@ -75,7 +75,7 @@ Painel único dos agentes da Pataro Treinamentos. Foco desde 12/11/2026. O Norma
 6. **Grupos de alunos** na lista permitida (tela do WhatsApp, "Ler") quando o chip estiver nos grupos
 7. **Planilha de alunos** (5 abas, do Hoklo): `npm run importar` → primeira ficha real (entrega 1 do CS)
 8. **Cérebro**: preços, reembolso, metas e tom estão "a preencher" (textos do Fred ou do Hoklo)
-9. **SDR, 1ª versão** ✅ 18/11 (falta deploy): mesma linha dos outros agentes, modo semiautomático.
+9. **SDR, 1ª versão** ✅ 18/11 (no ar, commit 973bc12; tabelas criadas no Neon): mesma linha dos outros agentes, modo semiautomático.
    - Mensagem privada no chip do agente → `POST /api/whatsapp/entrada?chave=…` (o Evolution chama pela rede interna;
      chave sai da `WHATSAPP_CHAVE`, sem segredo novo; avisos ligados sozinhos em `lib/rodada-whatsapp.ts` quando o chip
      conecta) → tabelas `leads` e `lead_mensagens`. Grupo, status e mensagem nossa ficam de fora
