@@ -2,7 +2,7 @@
 
 Painel único dos agentes da Pataro Treinamentos. Foco desde 12/11/2026. O Norman é o dono (P0).
 
-## Onde paramos (17/11/2026, tarde) — ler primeiro
+## Onde paramos (17/11/2026, noite) — ler primeiro
 
 **Meta:** entregar tudo até **quinta 19/11 cedo** (sexta 20/11 é feriado e o time não trabalha).
 
@@ -30,7 +30,7 @@ Painel único dos agentes da Pataro Treinamentos. Foco desde 12/11/2026. O Norma
     de `CONTRATOS_DESDE` (padrão 2026-11-17), pros antigos não voltarem pra fila
 
 ### Feito em 17/11, à tarde
-- **WhatsApp do agente pronto pra ligar** (não está na VPS ainda): Evolution API v2.3.7 + Postgres próprio no
+- **WhatsApp do agente no ar na VPS** (deploy do commit 5c8d21a, à noite): Evolution API v2.3.7 + Postgres próprio no
   `compose.yml` (sem porta pra internet; a Central fala com ele por `http://whatsapp:8080`; guarda só a sessão do
   chip). Tela **Integrações → WhatsApp** (`app/integracoes/whatsapp/`) mostra o QR, o estado e a lista de
   **grupos liberados** (tabela `destinos`: a fila guarda só a chave `grupo:comercial`, uma pessoa escolhe o grupo
@@ -40,7 +40,16 @@ Painel único dos agentes da Pataro Treinamentos. Foco desde 12/11/2026. O Norma
   Evolution de verdade (`deploy/whatsapp-local.yml`): QR gerado e tela ok
 - **Robô do Google ligado:** `agente-contrato@centralpataro.iam.gserviceaccount.com`, APIs do Drive e do Sheets
   ativadas, pasta Contratos Trilha compartilhada (`CONTRATOS_PASTA_ID=1wk8rUsZHDRKkE0YfdTBAz7hUWjzjrj5l`). Chave no PC em
-  `~/.central/robo-google.json` (fora do git); na VPS ainda não
+  `~/.central/robo-google.json` (fora do git). Na VPS: `/opt/central/robo-google.json` (dono uid 1000, 600), montado
+  no container em `/run/segredos/robo-google.json`. Planilha **Gestão Contratos Trilha** compartilhada como editor
+  (`CONTRATOS_PLANILHA_ID=1tdffmdMeCVmw3-R7kFMHdojt_1BrJCPbzxvI85RAauU`, aba **Contratos**, 20 colunas: Nº, Data da
+  venda, Comprador (Hotmart), Contratante no contrato, CPF/CNPJ do contratante, E-mail, WhatsApp, Forma de pagamento,
+  Valor total (R$), Detalhe do pagamento, Transação Hotmart, Dados a solicitar, Enviar mensagem, Enviar (2ª
+  contratante), Mensagem enviada, Dados recebidos, Contrato pronto, Enviado no AppSing, Assinado, Observações)
+- **Deploy de 17/11 à noite:** tabela `destinos` criada no Neon, `.env` da VPS com `GOOGLE_SERVICO_JSON`,
+  `CONTRATOS_PASTA_ID`, `CONTRATOS_PLANILHA_ID`, `CONTRATOS_DESDE`, `WHATSAPP_CHAVE`, `WHATSAPP_DB_SENHA`,
+  `WHATSAPP_INSTANCIA` (cópia em `.env.producao`). Conferido dentro do container: Evolution 2.3.7 respondendo, chave
+  do WhatsApp aceita, chave do robô lida. Código no GitHub (TreinamentosPataro/central-pataro)
 - **Teste seco com os 16 contratos reais** (sem gravar nada): a régua estava apertada. Ajustado: marcação amarela
   não trava (o comercial pinta o que preenche), forma entre colchetes vale ("[PIX]") e só trava a lista da minuta,
   parcelas em texto livre, campo em branco do cliente não herda o endereço da Pataro, "Minas Gerais" sem cidade pede a
@@ -48,26 +57,35 @@ Painel único dos agentes da Pataro Treinamentos. Foco desde 12/11/2026. O Norma
   quadro igual ao exemplo da minuta, R$ 35 mil em 08/09)
 
 ### Próximos passos (em ordem)
-1. **Robô na VPS** (junto com o deploy do WhatsApp): copiar a chave pra `/opt/central/robo-google.json` e pôr no
-   `.env` da VPS `GOOGLE_SERVICO_JSON` + `CONTRATOS_PASTA_ID`. Conferir se a planilha **Gestão Contratos Trilha** foi
-   compartilhada com o robô (editor) e pegar o id dela
-2. **Primeiro contrato novo** (criado a partir de 17/11) passa pela rodada `npm run agente:contratos` e cai na fila
-3. **Registrar na planilha** Gestão Contratos Trilha (ver as colunas antes; contratos.md lista: data da venda,
-   comprador, contratante, CPF/CNPJ, e-mail, WhatsApp, forma, valor, detalhe, transação Hotmart)
-4. **Subir o WhatsApp pra VPS** (quando o Henrique pedir): pôr `WHATSAPP_CHAVE` e `WHATSAPP_DB_SENHA` no
-   `/opt/central/.env`, `bash deploy/deploy.sh`, `npm run db:migrar` contra o Neon (tabela `destinos`). Depois o
-   Henrique lê o QR com o **chip do agente** e liga o grupo do comercial na tela
-5. **Envio pro ZapSign depois da aprovação**: sem API = Claude fazendo os cliques; com o Equipe = API
-6. **Grupos liberados**: com o chip conectado, os grupos aparecem na tela; cadastrar os de alunos lá
+1. **Henrique: ligar o chip** — pôr o número do chip do agente no grupo do comercial (WhatsApp normal), ler o QR em
+   Integrações → WhatsApp e, na linha `grupo:comercial`, escolher o grupo, marcar Enviar e Salvar. O robô **não**
+   adivinha o grupo: a escolha é de uma pessoa, uma vez só
+2. **Rodada de contratos dentro da Central** — hoje só existe `npm run agente:contratos` (tsx), que **não roda no
+   container** (tsx é devDependency e sai no `npm prune`). Fazer como o WhatsApp: rodada a cada X minutos ligada no
+   `instrumentation.ts` (ou rota protegida + botão "conferir agora"), respeitando o botão de parar
+3. **Registrar na planilha** Gestão Contratos Trilha a cada contrato novo (colunas acima; nunca sobrescrever linha
+   preenchida à mão; só colunas que o agente sabe: data, contratante, forma, valor, "Contrato pronto")
+4. **Primeiro contrato novo** (criado a partir de 17/11) cai na fila → Hoklo aprova → aviso sai no grupo do comercial
+5. **Envio pro ZapSign depois da aprovação**: sem API = Claude fazendo os cliques; com o Equipe = API (Fred e Hoklo decidem)
+6. **Grupos de alunos** na lista permitida (tela do WhatsApp, "Ler") quando o chip estiver nos grupos
 7. **Planilha de alunos** (5 abas, do Hoklo): `npm run importar` → primeira ficha real (entrega 1 do CS)
 8. **Cérebro**: preços, reembolso, metas e tom estão "a preencher" (textos do Fred ou do Hoklo)
 9. **SDR**: aula do Thales (Fase 6) e montar dentro do Claude (prazo 19/11 pro estudo, 23/11 a 1ª versão)
+10. **Mandar o PDF do CS pro Hoklo aprovar** (`pdf/cs-respostas.pdf`), se ainda não foi
 
 ### Pra trabalhar no PC
 - `npm run dev` (banco local em `.dados/`, entrada escolhendo o usuário; dados de teste com `npm run db:semear -- --demo`).
   `.env.local` = só PC; `.env.producao` = segredos do servidor (fora do git, não mostrar no chat)
 - **Dev dando 404 do nada** depois de muitas mudanças ou de um `npm run build`: parar o dev, apagar `.next/` e subir de novo
 - Rodar algo contra o Neon: `npx tsx --env-file=.env.producao scripts/<script>.ts`
+- **Deploy:** só quando o Henrique pedir. `npx tsx --env-file=.env.producao scripts/migrar.ts` (se mudou o schema) e
+  depois `bash deploy/deploy.sh` (sobe o último commit). O Evolution leva ~30 s pra responder depois de subir
+- **WhatsApp no PC:** `docker compose -p central-whats-local -f deploy/whatsapp-local.yml up -d` (Docker Desktop
+  ligado) e `.env.local` com `WHATSAPP_URL=http://localhost:8080` e `WHATSAPP_CHAVE=chave-local-de-teste`
+- **Robô no PC:** `.env.local` já tem `GOOGLE_SERVICO_JSON`, `CONTRATOS_PASTA_ID` e `CONTRATOS_PLANILHA_ID`.
+  Teste seco (lê os contratos reais sem gravar): ver o `.tmp/seco.ts` (pasta ignorada pelo git)
+- **GitHub:** este repositório sai pela conta TreinamentosPataro (`gh auth switch -u TreinamentosPataro`); o normanOS
+  pela hNNrq
 - **Push e deploy só quando o Henrique pedir.** Push com a conta da Pataro (o gh tem as duas contas):
   `TOKEN=$(gh auth token --user TreinamentosPataro)` e `git -c credential.helper= -c "credential.helper=!f(){ echo username=TreinamentosPataro; echo password=$TOKEN; }; f" push origin main`.
   Deploy: `bash deploy/deploy.sh`
