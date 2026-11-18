@@ -52,7 +52,7 @@ export const HORAS_PRA_RETOMAR = 24
 const PRIVADO = /@(s\.whatsapp\.net|lid)$/
 
 /** Texto da mensagem, seja qual for o tipo. Mídia vira um aviso pra pessoa olhar no celular. */
-function textoDa(m: Record<string, any> | undefined): string | null {
+export function textoDa(m: Record<string, any> | undefined): string | null {
   if (!m) return null
   const t = m.conversation ?? m.extendedTextMessage?.text ?? m.imageMessage?.caption ?? m.videoMessage?.caption
   if (typeof t === 'string' && t.trim()) return t.trim()

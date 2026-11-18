@@ -8,6 +8,8 @@ import { listarFila } from '@/lib/fila'
 import { contratosConfigurado } from '@/lib/rodada-contratos'
 import { conversasPendentes, listarLeads } from '@/lib/sdr'
 import { INSTRUCOES_SDR } from '@/lib/sdr-instrucoes'
+import { INSTRUCOES_CS } from '@/lib/cs-instrucoes'
+import { perguntasSemResposta, resumoGrupos } from '@/lib/cs-grupos'
 import { atividadeDoAgente, nomeAcao, requisitosDoAgente } from '@/lib/painel-agente'
 import { LEMA } from '@/lib/equipe'
 import { Onda, type EstadoOnda } from '../../onda'
@@ -51,6 +53,8 @@ export default async function PaginaAgente({ params, searchParams }: {
     : []
   const leads = id === 'sdr' ? await listarLeads(db) : []
   const esperandoRodada = id === 'sdr' ? (await conversasPendentes(db)).length : 0
+  const grupos = id === 'cs' ? await resumoGrupos(db) : []
+  const perguntasCs = id === 'cs' ? (await perguntasSemResposta(db)).length : 0
   const porSituacao = leads.reduce<Record<string, number>>((m, l) => ({ ...m, [l.situacao]: (m[l.situacao] ?? 0) + 1 }), {})
 
   return (
@@ -160,10 +164,37 @@ export default async function PaginaAgente({ params, searchParams }: {
       )}
 
       {id === 'cs' && (
-        <section className="area">
-          <div className="area-cabeca"><h2>Alunos</h2></div>
-          <p className="mudo">A ficha de cada aluno fica em <Link href="/alunos">Alunos</Link>. O agente lê os grupos liberados em Integrações → WhatsApp.</p>
-        </section>
+        <>
+          <section className="area">
+            <div className="area-cabeca"><h2>Grupos que ele lê</h2><span className="pilula">{grupos.length}</span></div>
+            {grupos.length === 0 ? (
+              <div className="vazio">Nenhum grupo liberado. Ponha o chip do agente nos grupos de alunos e marque "Ler" em <Link href="/integracoes/whatsapp">Integrações → WhatsApp</Link>.</div>
+            ) : (
+              <div className="rolar"><table>
+                <thead><tr><th>Grupo</th><th>Mensagens lidas</th><th>Última</th><th>Responde no grupo</th></tr></thead>
+                <tbody>{grupos.map((g) => (
+                  <tr key={g.id}>
+                    <td><b>{g.nome}</b></td>
+                    <td>{g.mensagens}</td>
+                    <td className="mudo">{g.ultima ? horaBR(g.ultima) : '—'}</td>
+                    <td>{g.enviar ? 'Sim' : <span className="mudo">Não (marcar "Enviar")</span>}</td>
+                  </tr>
+                ))}</tbody>
+              </table></div>
+            )}
+            <div className="ficha-agente" style={{ marginTop: 12 }}>
+              <div><small>Perguntas esperando a rodada /cs</small><b>{perguntasCs}</b></div>
+            </div>
+            <p className="mudo">A rodada é feita pelo Claude (modo de teste): ele lê as perguntas sem resposta há mais de 30 minutos e escreve a resposta, que cai na fila acima. A ficha de cada aluno fica em <Link href="/alunos">Alunos</Link>.</p>
+          </section>
+          <section className="area">
+            <details className="instrucoes">
+              <summary><h2>Como ele responde (instruções)</h2></summary>
+              <pre>{INSTRUCOES_CS}</pre>
+              <p className="mudo">Mudar o jeito de responder = mudar este texto (lib/cs-instrucoes.ts).</p>
+            </details>
+          </section>
+        </>
       )}
 
       <section className="area">

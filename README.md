@@ -72,7 +72,13 @@ Painel único dos agentes da Pataro Treinamentos. Foco desde 12/11/2026. O Norma
    e colunas, nunca o conteúdo. Cabeçalho real conferido em 18/11 (`.tmp/cabecalho.ts`, só leitura)
 4. **Primeiro contrato novo** (criado a partir de 17/11) cai na fila → Hoklo aprova → aviso sai no grupo do comercial
 5. **Envio pro ZapSign depois da aprovação**: sem API = Claude fazendo os cliques; com o Equipe = API (Fred e Hoklo decidem)
-6. **Grupos de alunos** na lista permitida (tela do WhatsApp, "Ler") quando o chip estiver nos grupos
+6. **CS nos grupos (acompanhamento)** ✅ 18/11 (falta deploy e migrar: tabela `grupo_mensagens`): mensagem de grupo
+   **liberado pra leitura** (Integrações → WhatsApp, "Ler") entra pela mesma porta do SDR e fica em `grupo_mensagens`;
+   grupo fora da lista é descartado. Pergunta com mais de 30 min e menos de 3 dias, sem resposta citando → rodada `/cs`
+   (`scripts/cs.ts`, instruções em `lib/cs-instrucoes.ts`, 5 aulas sugeridas do catálogo da Pataro I.A por pergunta,
+   lido de `../fred-ia/conteudo/`) → fila (`pergunta_sem_resposta`, destino = o grupo da pergunta) → aprovada, sai no
+   mesmo grupo. Ignorar pede motivo. CPF na resposta = recusada. 9 testes (`tests/cs-grupos.test.ts`). Página do agente
+   mostra os grupos lidos e as perguntas esperando. Falta: chip nos grupos de alunos e marcar "Ler" (e "Enviar")
 7. **Planilha de alunos** (5 abas, do Hoklo): `npm run importar` → primeira ficha real (entrega 1 do CS)
 8. **Cérebro**: preços, reembolso, metas e tom estão "a preencher" (textos do Fred ou do Hoklo)
 9. **SDR, 1ª versão** ✅ 18/11 (no ar, commit 973bc12; tabelas criadas no Neon): mesma linha dos outros agentes, modo semiautomático.

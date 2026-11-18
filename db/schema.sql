@@ -264,3 +264,20 @@ CREATE TABLE IF NOT EXISTS lead_mensagens (
   quando     timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS lead_mensagens_lead_idx ON lead_mensagens (lead_id, quando);
+
+-- Agente de CS: mensagens dos grupos de alunos LIBERADOS pra leitura (destinos.ler). Grupo fora da lista nem entra.
+-- O agente procura pergunta sem resposta e propõe a resposta na fila; aprovada, sai no mesmo grupo.
+CREATE TABLE IF NOT EXISTS grupo_mensagens (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  destino_id  text NOT NULL REFERENCES destinos(id),   -- o grupo (grupo:…), pela lista permitida
+  autor_jid   text,
+  autor_nome  text,
+  texto       text NOT NULL,
+  wa_id       text UNIQUE,
+  responde_a  text,                  -- wa_id da mensagem citada (quando alguém responde citando)
+  de_nos      boolean NOT NULL DEFAULT false,  -- saiu do chip do agente
+  tratada     text CHECK (tratada IN ('na_fila', 'ignorada')),  -- o agente já olhou essa pergunta
+  motivo      text,                  -- por que ignorou (já respondida, não é pergunta…)
+  quando      timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS grupo_mensagens_grupo_idx ON grupo_mensagens (destino_id, quando);
