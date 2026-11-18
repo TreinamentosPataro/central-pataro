@@ -5,6 +5,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { avisoComercial, cnpjValido, conferirContrato, lerHtmlDoGoogle, lerReais } from '@/lib/contratos'
 import { rodadaContratos } from '@/lib/agente-contratos'
+import { conferirPasta, type FonteContratos } from '@/lib/rodada-contratos'
 import { bancoLocal, type Banco } from '@/lib/db'
 
 interface Opcoes {
@@ -209,5 +210,66 @@ describe('agente de contratos · rodada na Central', () => {
     await db.query(`UPDATE contratos SET situacao = 'enviado' WHERE drive_id = 'doc4'`)
     const r = await rodadaContratos(db, [{ id: 'doc4', nome: 'X', versao: 'v2', html: contrato({ cep: '' }) }])
     expect(r.novos).toBe(0)
+  })
+})
+
+describe('agente de contratos · conferência da pasta (sozinho e pelo botão)', () => {
+  let db: Banco
+  beforeEach(async () => {
+    db = await bancoLocal()
+    await db.query(`INSERT INTO agentes (id, nome, dono) VALUES ('contratos', 'Agente de contratos', 'Norman')`)
+  })
+
+  const doc = (id: string, name: string, modifiedTime = 'v1', createdTime = '2026-11-18T10:00:00Z') =>
+    ({ id, name, createdTime, modifiedTime, webViewLink: `https://docs.google.com/document/d/${id}` })
+
+  /** Pasta inventada que conta quantos documentos foram baixados. */
+  function pasta(docs: ReturnType<typeof doc>[], html: Record<string, string> = {}) {
+    const baixados: string[] = []
+    const fonte: FonteContratos = {
+      listar: async () => docs,
+      html: async (id) => { baixados.push(id); return html[id] ?? contrato() },
+    }
+    return { fonte, baixados }
+  }
+
+  it('deixa de fora a minuta, os modelos e os contratos de antes de 17/11', async () => {
+    const { fonte, baixados } = pasta([
+      doc('a', 'Contrato Maria'),
+      doc('b', 'Minuta do Contrato'),
+      doc('c', 'Cópia de Contrato Modelo'),
+      doc('d', 'Contrato antigo', 'v1', '2026-10-02T10:00:00Z'),
+    ])
+    const r = await conferirPasta(db, fonte, '2026-11-17')
+    expect(r).toMatchObject({ vistos: 1, novos: 1, prontos: 1 })
+    expect(baixados).toEqual(['a'])
+  })
+
+  it('não baixa de novo o que não mudou; baixa quando o Bruno mexe no documento', async () => {
+    const { fonte, baixados } = pasta([doc('a', 'Contrato Maria')], { a: contrato({ cep: '' }) })
+    await conferirPasta(db, fonte, '2026-11-17')
+    const segunda = await conferirPasta(db, fonte, '2026-11-17')
+    expect(segunda.novos).toBe(0)
+    expect(baixados).toEqual(['a'])
+
+    const mexido = pasta([doc('a', 'Contrato Maria', 'v2')])
+    const r = await conferirPasta(db, mexido.fonte, '2026-11-17')
+    expect(r).toMatchObject({ novos: 1, prontos: 1 })
+  })
+
+  it('com o botão de parar ligado, não lê a pasta', async () => {
+    await db.query(`UPDATE agentes SET parado = true WHERE id = 'contratos'`)
+    let leu = false
+    const r = await conferirPasta(db, { listar: async () => { leu = true; return [] }, html: async () => '' })
+    expect(r.parado).toBe(true)
+    expect(leu).toBe(false)
+  })
+
+  it('erro do Google fica na auditoria como erro do agente', async () => {
+    const quebrada: FonteContratos = { listar: async () => { throw new Error('Drive fora (500)') }, html: async () => '' }
+    await expect(conferirPasta(db, quebrada)).rejects.toThrow('Drive fora')
+    const [a] = await db.query<{ acao: string; evidencia: string }>(`SELECT acao, evidencia FROM auditoria WHERE quem = 'agente:contratos'`)
+    expect(a.acao).toBe('agente.erro')
+    expect(a.evidencia).toContain('Drive fora')
   })
 })

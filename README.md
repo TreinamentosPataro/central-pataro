@@ -60,9 +60,10 @@ Painel único dos agentes da Pataro Treinamentos. Foco desde 12/11/2026. O Norma
 1. **Henrique: ligar o chip** — pôr o número do chip do agente no grupo do comercial (WhatsApp normal), ler o QR em
    Integrações → WhatsApp e, na linha `grupo:comercial`, escolher o grupo, marcar Enviar e Salvar. O robô **não**
    adivinha o grupo: a escolha é de uma pessoa, uma vez só
-2. **Rodada de contratos dentro da Central** — hoje só existe `npm run agente:contratos` (tsx), que **não roda no
-   container** (tsx é devDependency e sai no `npm prune`). Fazer como o WhatsApp: rodada a cada X minutos ligada no
-   `instrumentation.ts` (ou rota protegida + botão "conferir agora"), respeitando o botão de parar
+2. ~~**Rodada de contratos dentro da Central**~~ ✅ 18/11 (falta deploy): `lib/rodada-contratos.ts` confere a pasta a cada
+   10 min (ligada no `instrumentation.ts`, primeira 30 s depois de subir) e pelo botão **Conferir agora** no cartão do
+   agente. Respeita o botão de parar, só baixa documento novo ou alterado, erro do Google vai pra auditoria
+   (`agente.erro`). `npm run agente:contratos` usa a mesma função. Testado no PC contra a pasta real (0 novos desde 17/11)
 3. **Registrar na planilha** Gestão Contratos Trilha a cada contrato novo (colunas acima; nunca sobrescrever linha
    preenchida à mão; só colunas que o agente sabe: data, contratante, forma, valor, "Contrato pronto")
 4. **Primeiro contrato novo** (criado a partir de 17/11) cai na fila → Hoklo aprova → aviso sai no grupo do comercial

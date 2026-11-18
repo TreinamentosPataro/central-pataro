@@ -397,6 +397,8 @@ main.sozinho { max-width: 1120px; }
 .na-fila { font-weight: 600; color: var(--ouro-escuro); text-decoration: none; }
 .na-fila:hover { text-decoration: underline; }
 .parar { margin-top: 12px; }
+.conferir { margin-top: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.conferir small { font-size: 12px; color: var(--tinta-3); flex: 1 1 140px; }
 
 /* busca larga (Cérebro e integrações) */
 .busca-larga { margin: 0 0 8px; }

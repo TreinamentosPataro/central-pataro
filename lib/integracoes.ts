@@ -33,9 +33,9 @@ export const GRUPOS_INTEGRACAO: { nome: string; itens: Integracao[] }[] = [
   {
     nome: 'Documentos e contratos',
     itens: [
-      { nome: 'Google Drive', sigla: 'D', cor: '#e1a10a', para: 'Calls e contratos', estado: 'falta', nota: 'Falta liberar as pastas' },
+      { nome: 'Google Drive', sigla: 'D', cor: '#e1a10a', para: 'Calls e contratos', estado: 'conectado', nota: 'Pasta Contratos Trilha, conferida a cada 10 min' },
       { nome: 'ZapSign', sigla: 'Z', cor: '#2563eb', para: 'Assinatura', estado: 'falta', nota: 'Plano atual sem API' },
-      { nome: 'Planilhas Google', sigla: 'P', cor: '#188038', para: 'Gestão Contratos Trilha', estado: 'falta', nota: 'Falta o acesso' },
+      { nome: 'Planilhas Google', sigla: 'P', cor: '#188038', para: 'Gestão Contratos Trilha', estado: 'conectado', nota: 'Acesso liberado pro robô' },
     ],
   },
   {
