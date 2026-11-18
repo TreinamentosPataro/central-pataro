@@ -64,7 +64,7 @@ Painel único dos agentes da Pataro Treinamentos. Foco desde 12/11/2026. O Norma
    10 min (ligada no `instrumentation.ts`, primeira 30 s depois de subir) e pelo botão **Conferir agora** no cartão do
    agente. Respeita o botão de parar, só baixa documento novo ou alterado, erro do Google vai pra auditoria
    (`agente.erro`). `npm run agente:contratos` usa a mesma função. Testado no PC contra a pasta real (0 novos desde 17/11)
-3. ~~**Registrar na planilha**~~ ✅ 18/11 (falta deploy): `lib/planilha-contratos.ts`. Acha a linha do cliente pelo CPF/CNPJ
+3. ~~**Registrar na planilha**~~ ✅ 18/11 (no ar, commit 579ad10): `lib/planilha-contratos.ts`. Acha a linha do cliente pelo CPF/CNPJ
    (coluna E) ou pelo nome (D ou C) e **só completa célula em branco** (D a J, L = o que falta); marca "Contrato pronto"
    quando pronto, nunca desmarca. Sem linha do cliente, cria uma depois do último cliente (Nº seguinte, caixinhas
    desmarcadas, nota em Observações pra completar data da venda, comprador e transação Hotmart). Cabeçalho fora da
