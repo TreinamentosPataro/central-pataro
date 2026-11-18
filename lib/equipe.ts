@@ -16,6 +16,31 @@ export const AREAS: Area[] = [
   { id: 'financeiro', nome: 'Financeiro & Dados', lema: 'Quem cuida do caixa', agentes: ['financeiro'] },
 ]
 
+/**
+ * A operação da Pataro em ordem (reunião de 12/11), pra quem prefere ver a Central como um fluxo.
+ * `quem` é quem faz a etapa hoje; `agentes`, os agentes que trabalham nela. Etapa sem agente = feita por pessoa.
+ */
+export interface Etapa {
+  id: string
+  nome: string
+  quem: string
+  agentes: string[]
+  pausada?: boolean
+}
+
+export const FLUXO: Etapa[] = [
+  { id: 'metricas', nome: 'Análise e métricas de social media', quem: 'Hoklo + IA', agentes: [] },
+  { id: 'design', nome: 'Design', quem: 'Harley + prestador', agentes: [] },
+  { id: 'perfis', nome: 'Perfis das redes sociais', quem: 'Prestador + IA', agentes: ['social'] },
+  { id: 'trafego', nome: 'Tráfego pago', quem: 'Hoklo + IA', agentes: ['trafego'] },
+  { id: 'sdr', nome: 'SDR', quem: 'Norman', agentes: ['sdr'] },
+  { id: 'closer', nome: 'Closer', quem: 'pausado', agentes: [], pausada: true },
+  { id: 'contrato', nome: 'Contrato', quem: 'Norman', agentes: ['contratos'] },
+  { id: 'cs', nome: 'CS', quem: 'Hoklo + IA', agentes: ['cs'] },
+  { id: 'entregaveis', nome: 'Entregáveis', quem: 'Fred + Hoklo', agentes: [] },
+  { id: 'financeiro', nome: 'Financeiro', quem: 'Ana Paula + IA', agentes: ['financeiro'] },
+]
+
 /** A frase do cartão, em itálico: o resultado que o agente entrega, em poucas palavras. */
 export const LEMA: Record<string, string> = {
   cs: 'Aluno respondido em minutos',

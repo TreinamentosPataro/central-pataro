@@ -5,10 +5,11 @@ import { listarAgentes } from '@/lib/agentes'
 import { pode } from '@/lib/papeis'
 import { listarVerbetes, resumoPorTema, situacao } from '@/lib/cerebro'
 import { contratosConfigurado } from '@/lib/rodada-contratos'
-import { conferirContratos, pararOuRetomar } from './agentes/acoes'
+import { cookies } from 'next/headers'
+import { conferirContratos, pararOuRetomar, trocarVista } from './agentes/acoes'
 import { avisoConferencia, horaBR } from './agentes/formato'
 import { Onda, type EstadoOnda } from './onda'
-import { AREAS, LEMA } from '@/lib/equipe'
+import { AREAS, FLUXO, LEMA } from '@/lib/equipe'
 
 const STATUS: Record<string, string> = { no_ar: 'No ar', em_construcao: 'Em construção', parado: 'Parado' }
 
@@ -25,6 +26,7 @@ export default async function Agentes({ searchParams }: { searchParams: Promise<
   const [c] = await db.query<{ n: number }>(
     `SELECT count(*)::int AS n FROM auditoria WHERE acao = 'cerebro.buscar' AND quando > now() - interval '7 days'`)
   const consultas = c?.n ?? 0
+  const vista = (await cookies()).get('central_vista')?.value === 'fluxo' ? 'fluxo' : 'areas'
 
   type Ag = (typeof agentes)[number]
   const estado = (a: Ag): EstadoOnda => (a.parado ? 'parado' : (a.status as EstadoOnda))
@@ -35,6 +37,12 @@ export default async function Agentes({ searchParams }: { searchParams: Promise<
     ...AREAS.map((ar) => ({ ...ar, lista: ar.agentes.map((id) => porId.get(id)).filter((x): x is Ag => !!x) })),
     { id: 'outros', nome: 'Outros', lema: 'Ainda sem área', agentes: [], lista: agentes.filter((a) => !naArea.has(a.id)) },
   ].filter((g) => g.lista.length)
+  const noFluxo = new Set(FLUXO.flatMap((e) => e.agentes))
+  const etapas = [
+    ...FLUXO.map((e) => ({ ...e, lista: e.agentes.map((id) => porId.get(id)).filter((x): x is Ag => !!x) })),
+    ...agentes.filter((a) => !noFluxo.has(a.id)).map((a) => ({ id: a.id, nome: a.funcao ?? a.nome, quem: a.dono, agentes: [a.id], pausada: false, lista: [a] })),
+  ]
+  const comAgente = etapas.filter((e) => e.lista.length).length
 
   const Cartao = ({ a }: { a: Ag }) => (
     <article className={`cartao agente ${estado(a)}`} title={a.descricao ?? undefined}>
@@ -131,21 +139,71 @@ export default async function Agentes({ searchParams }: { searchParams: Promise<
         </Link>
       </div>
 
-      {grupos.map((g) => {
-        const vivos = g.lista.filter((a) => a.status === 'no_ar' && !a.parado).length
-        return (
-          <section key={g.id} className="area">
-            <div className="area-cabeca">
-              <h2>{g.nome}</h2>
-              <em className="area-lema">{g.lema}</em>
-              <span className="pilula">{g.lista.length} {g.lista.length === 1 ? 'agente' : 'agentes'} · {vivos} no ar</span>
-            </div>
-            <div className="cartoes agentes">
-              {g.lista.map((a) => <Cartao key={a.id} a={a} />)}
-            </div>
-          </section>
-        )
-      })}
+      <form action={trocarVista} className="vistas" aria-label="Como ver os agentes">
+        <button type="submit" name="vista" value="areas" className={vista === 'areas' ? 'ativa' : ''} aria-pressed={vista === 'areas'}>Por área</button>
+        <button type="submit" name="vista" value="fluxo" className={vista === 'fluxo' ? 'ativa' : ''} aria-pressed={vista === 'fluxo'}>Fluxo da operação</button>
+      </form>
+
+      {vista === 'fluxo' ? (
+        <section className="area fluxo">
+          <div className="area-cabeca">
+            <h2>Fluxo da operação</h2>
+            <em className="area-lema">Do perfil ao financeiro, etapa por etapa</em>
+            <span className="pilula">{etapas.length} etapas · {comAgente} com agente</span>
+          </div>
+          <ol className="trilho">
+            {etapas.map((e) => {
+              const a = e.lista[0]
+              const tipo = e.pausada ? 'pausada' : a ? estado(a) : 'pessoa'
+              const corpo = (
+                <>
+                  {a && <span className="etapa-onda"><Onda id={a.id} estado={estado(a)} tamanho={34} /></span>}
+                  <b>{e.nome}</b>
+                  {a && (
+                    <small className="etapa-status">{a.parado ? 'Parado' : a.status === 'no_ar' ? '✓ No ar' : 'Em construção'}</small>
+                  )}
+                  {a && (a.pendentes ?? 0) > 0 && (
+                    <span className="etapa-fila" title={`${a.pendentes} na fila de aprovação`}>{a.pendentes}</span>
+                  )}
+                </>
+              )
+              return (
+                <li key={e.id} className={`etapa ${tipo}`}>
+                  {a
+                    ? <Link href={`/agentes/${a.id}`} className="etapa-caixa" title={`${a.nome}${a.prazo && a.status !== 'no_ar' ? ` · prazo ${a.prazo}` : ''}: abrir a página do agente`}>{corpo}</Link>
+                    : <div className="etapa-caixa">{corpo}</div>}
+                  <span className="etapa-quem">{e.quem}</span>
+                </li>
+              )
+            })}
+          </ol>
+          <p className="legenda-fluxo">
+            <span><i className="ponto no_ar" /> agente no ar</span>
+            <span><i className="ponto em_construcao" /> agente em construção</span>
+            <span><i className="ponto pessoa" /> feito por pessoa</span>
+            <span><i className="ponto pausada" /> pausado</span>
+            <span className="mudo">Clique na etapa com agente pra abrir a página dele.</span>
+          </p>
+        </section>
+      ) : (
+        <>
+        {grupos.map((g) => {
+          const vivos = g.lista.filter((a) => a.status === 'no_ar' && !a.parado).length
+          return (
+            <section key={g.id} className="area">
+              <div className="area-cabeca">
+                <h2>{g.nome}</h2>
+                <em className="area-lema">{g.lema}</em>
+                <span className="pilula">{g.lista.length} {g.lista.length === 1 ? 'agente' : 'agentes'} · {vivos} no ar</span>
+              </div>
+              <div className="cartoes agentes">
+                {g.lista.map((a) => <Cartao key={a.id} a={a} />)}
+              </div>
+            </section>
+          )
+        })}
+        </>
+      )}
       {agentes.length === 0 && <div className="vazio">Nenhum agente cadastrado. Rode <code>npm run db:semear</code>.</div>}
     </>
   )

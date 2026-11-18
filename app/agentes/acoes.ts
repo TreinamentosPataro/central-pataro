@@ -2,6 +2,7 @@
 /** Ações dos agentes usadas na tela inicial e na página de cada agente. */
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { getBanco } from '@/lib/db'
 import { exigirUsuario } from '@/lib/sessao'
 import { alternarParada } from '@/lib/agentes'
@@ -10,6 +11,15 @@ import { conferirPasta, fonteDrive } from '@/lib/rodada-contratos'
 
 /** Só volta pra tela da própria Central (nada de endereço de fora). */
 const voltaSegura = (v: FormDataEntryValue | null) => (typeof v === 'string' && /^\/[a-z0-9/_-]*$/i.test(v) ? v : '/')
+
+/** Tela inicial por área ou como fluxo da operação. Fica guardado no navegador de cada um. */
+export async function trocarVista(formData: FormData) {
+  await exigirUsuario()
+  const vista = formData.get('vista') === 'fluxo' ? 'fluxo' : 'areas'
+  const jar = await cookies()
+  jar.set('central_vista', vista, { path: '/', httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 365 })
+  revalidatePath('/')
+}
 
 export async function pararOuRetomar(formData: FormData) {
   const u = await exigirUsuario('parar_agente')

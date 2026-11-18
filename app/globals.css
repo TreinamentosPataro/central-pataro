@@ -515,3 +515,68 @@ a.integracao:hover { border-color: var(--ouro); }
 .instrucoes summary::after { content: ' ▾'; color: var(--tinta-3); }
 .instrucoes pre { white-space: pre-wrap; font-family: inherit; font-size: 14px; background: var(--branco); border: 1px solid var(--linha); border-radius: var(--raio); padding: 14px 16px; margin: 12px 0 8px; }
 @media (max-width: 640px) { .requisitos li { flex-wrap: wrap; } .atividade li { flex-direction: column; gap: 0; } }
+
+/* tela inicial: por área ou como fluxo da operação */
+.vistas {
+  display: inline-flex; gap: 2px; padding: 3px; margin: 0 0 22px;
+  background: var(--papel-2); border: 1px solid var(--linha); border-radius: 999px;
+}
+.vistas button {
+  border: 0; background: none; font: inherit; font-size: 13px; font-weight: 500; color: var(--tinta-2);
+  padding: 6px 14px; border-radius: 999px; cursor: pointer;
+}
+.vistas button:hover { color: var(--tinta); }
+.vistas button.ativa { background: #fff; color: var(--tinta); font-weight: 600; box-shadow: 0 1px 3px rgba(11, 11, 11, .1); }
+.vistas button:focus-visible { outline: 2px solid var(--ouro); outline-offset: 1px; }
+
+.trilho {
+  list-style: none; margin: 0; padding: 10px 10px 14px 2px; display: flex; align-items: flex-start; gap: 16px;
+  overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: thin;
+}
+.etapa { flex: 1 1 0; min-width: 88px; display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; scroll-snap-align: start; }
+.etapa:not(:last-child)::after {
+  content: "→"; position: absolute; right: -14px; top: 48px; transform: translateY(-50%);
+  color: var(--tinta-3); font-size: 15px;
+}
+.etapa-caixa {
+  width: 100%; height: 96px; border-radius: 14px; padding: 8px 6px; position: relative; text-align: center; text-decoration: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  border: 1px solid var(--linha); background: #fff; color: var(--tinta);
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+.etapa-caixa b { font-size: 12.5px; line-height: 1.2; letter-spacing: -.01em; }
+.etapa-onda { display: block; line-height: 0; }
+.etapa-status { font-size: 11px; color: var(--tinta-3); }
+.etapa-fila {
+  position: absolute; top: -8px; right: -8px; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
+  background: var(--ouro); color: var(--tinta); font-size: 11px; font-weight: 700; display: grid; place-items: center;
+}
+a.etapa-caixa:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(11, 11, 11, .05), 0 12px 28px rgba(11, 11, 11, .08); }
+a.etapa-caixa:focus-visible { outline: 2px solid var(--ouro); outline-offset: 2px; }
+.etapa-quem { font-size: 12px; font-weight: 600; color: var(--tinta-2); text-align: center; }
+
+.etapa.no_ar .etapa-caixa { background: var(--tinta); border-color: var(--tinta); color: #f2efe8; box-shadow: 0 6px 16px rgba(244, 170, 39, .18); }
+.etapa.no_ar .etapa-status { color: var(--ouro); }
+.etapa.em_construcao .etapa-caixa { border-color: #f6dfa9; box-shadow: inset 0 3px 0 var(--ouro); }
+.etapa.em_construcao .etapa-status { color: var(--amarelo); }
+.etapa.parado .etapa-caixa { border-color: #e9c4bb; }
+.etapa.parado .etapa-status { color: var(--vermelho); }
+.etapa.pessoa .etapa-caixa { background: var(--papel-2); color: var(--tinta-2); }
+.etapa.pausada .etapa-caixa { background: transparent; border: 1.5px dashed #c9c9cf; color: var(--tinta-3); }
+.etapa.pausada .etapa-quem { color: var(--tinta-3); font-weight: 500; }
+
+.legenda-fluxo { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 10px 0 0; font-size: 12.5px; color: var(--tinta-2); }
+.legenda-fluxo span { display: inline-flex; align-items: center; gap: 6px; }
+.ponto { width: 10px; height: 10px; border-radius: 3px; display: inline-block; border: 1px solid var(--linha); }
+.ponto.no_ar { background: var(--tinta); border-color: var(--tinta); }
+.ponto.em_construcao { background: #fff; border-color: #f6dfa9; box-shadow: inset 0 2px 0 var(--ouro); }
+.ponto.pessoa { background: var(--papel-2); }
+.ponto.pausada { background: transparent; border: 1.5px dashed #c9c9cf; }
+
+@media (max-width: 720px) {
+  .trilho { flex-direction: column; align-items: stretch; overflow: visible; gap: 26px; padding-bottom: 4px; }
+  .etapa { flex: none; min-width: 0; flex-direction: row; gap: 12px; }
+  .etapa-caixa { height: auto; min-height: 64px; flex: 1; }
+  .etapa-quem { width: 96px; flex: none; text-align: left; }
+  .etapa:not(:last-child)::after { content: "↓"; right: auto; left: calc((100% - 108px) / 2); top: auto; bottom: -22px; transform: none; }
+}
