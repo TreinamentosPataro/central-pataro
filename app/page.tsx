@@ -1,54 +1,16 @@
-import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { getBanco } from '@/lib/db'
 import { exigirUsuario } from '@/lib/sessao'
-import { alternarParada, listarAgentes } from '@/lib/agentes'
+import { listarAgentes } from '@/lib/agentes'
 import { pode } from '@/lib/papeis'
 import { listarVerbetes, resumoPorTema, situacao } from '@/lib/cerebro'
-import { auditar } from '@/lib/auditoria'
-import { conferirPasta, contratosConfigurado, fonteDrive } from '@/lib/rodada-contratos'
+import { contratosConfigurado } from '@/lib/rodada-contratos'
+import { conferirContratos, pararOuRetomar } from './agentes/acoes'
+import { avisoConferencia, horaBR } from './agentes/formato'
 import { Onda, type EstadoOnda } from './onda'
 import { AREAS, LEMA } from '@/lib/equipe'
 
 const STATUS: Record<string, string> = { no_ar: 'No ar', em_construcao: 'Em construção', parado: 'Parado' }
-
-async function pararOuRetomar(formData: FormData) {
-  'use server'
-  const u = await exigirUsuario('parar_agente')
-  const db = await getBanco()
-  await alternarParada(db, u, String(formData.get('id')))
-  revalidatePath('/')
-}
-
-/** Botão "Conferir agora" do agente de contratos: a mesma rodada que roda sozinha a cada 10 minutos. */
-async function conferirContratos() {
-  'use server'
-  const u = await exigirUsuario()
-  const db = await getBanco()
-  await auditar(db, { quem: u.email, acao: 'contratos.conferir_agora', alvo: 'agente:contratos' })
-  let volta: string
-  try {
-    const r = await conferirPasta(db, fonteDrive())
-    volta = r.parado ? 'parado' : `${r.novos}-${r.prontos}-${r.travados}`
-  } catch {
-    volta = 'erro'
-  }
-  revalidatePath('/')
-  redirect(`/?contratos=${volta}`)
-}
-
-function avisoConferencia(v: string | undefined): string | null {
-  if (!v) return null
-  if (v === 'parado') return 'Agente parado: nada foi conferido.'
-  if (v === 'erro') return 'Não deu pra ler a pasta do Drive. O erro está na auditoria.'
-  const [novos, prontos, travados] = v.split('-').map(Number)
-  if (!novos) return 'Conferido: nenhum contrato novo ou alterado.'
-  return `Conferido: ${novos} ${novos === 1 ? 'contrato' : 'contratos'} · ${prontos} pronto${prontos === 1 ? '' : 's'} · ${travados} travado${travados === 1 ? '' : 's'}. Estão na fila.`
-}
-
-const horaBR = (iso: string) =>
-  new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 
 export default async function Agentes({ searchParams }: { searchParams: Promise<{ contratos?: string }> }) {
   const u = await exigirUsuario()
@@ -79,7 +41,7 @@ export default async function Agentes({ searchParams }: { searchParams: Promise<
       <div className="agente-cabeca">
         <span className="avatar"><Onda id={a.id} estado={estado(a)} tamanho={46} /></span>
         <div>
-          <h3>{a.nome}</h3>
+          <h3><Link href={`/agentes/${a.id}`} className="abrir-agente">{a.nome}</Link></h3>
           <span className="cargo">{a.funcao}</span>
         </div>
       </div>
@@ -99,6 +61,7 @@ export default async function Agentes({ searchParams }: { searchParams: Promise<
       </div>
       {a.id === 'contratos' && conferePasta && (
         <form action={conferirContratos} className="conferir">
+          <input type="hidden" name="volta" value="/" />
           <button className="botao leve" type="submit" disabled={a.parado}>Conferir agora</button>
           <small>
             {aviso ?? (a.ultima_execucao ? `Pasta conferida em ${horaBR(a.ultima_execucao)} · sozinho a cada 10 min` : 'Confere a pasta sozinho a cada 10 min')}
