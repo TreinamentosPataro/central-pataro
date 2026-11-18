@@ -7,7 +7,9 @@
 import type { Banco } from './db'
 import { auditar } from './auditoria'
 import { proporItem } from './fila'
-import { avisoComercial, conferirContrato, lerHtmlDoGoogle } from './contratos'
+import { registrarExecucao } from './agentes'
+import { avisoComercial, conferirContrato, contratantesDo, lerHtmlDoGoogle, pagamentoDo } from './contratos'
+import { registrarNaPlanilha, type PlanilhaContratos } from './planilha-contratos'
 
 export interface ArquivoContrato {
   id: string
@@ -27,7 +29,11 @@ export interface ResultadoRodada {
 /** Signatários fixos (contratos.md): cliente primeiro, depois o Fred; Hoklo e Ana Paula de testemunha. */
 export const ORDEM_ASSINATURA = ['o cliente', 'Fred (Pataro Treinamentos)', 'testemunhas: Hoklo e Ana Paula']
 
-export async function rodadaContratos(db: Banco, arquivos: ArquivoContrato[]): Promise<ResultadoRodada> {
+/**
+ * Com `planilha`, cada contrato conferido também é registrado na Gestão Contratos Trilha. Se a planilha falhar,
+ * o contrato continua na fila (o erro vai pra auditoria) e a próxima versão do documento tenta de novo.
+ */
+export async function rodadaContratos(db: Banco, arquivos: ArquivoContrato[], planilha?: PlanilhaContratos): Promise<ResultadoRodada> {
   const r: ResultadoRodada = { vistos: arquivos.length, novos: 0, prontos: 0, travados: 0 }
   for (const a of arquivos) {
     const [antes] = await db.query<{ versao: string; situacao: string }>(`SELECT versao, situacao FROM contratos WHERE drive_id = $1`, [a.id])
@@ -36,7 +42,8 @@ export async function rodadaContratos(db: Banco, arquivos: ArquivoContrato[]): P
     if (antes && antes.versao === a.versao) continue
     r.novos++
 
-    const c = conferirContrato(lerHtmlDoGoogle(a.html))
+    const doc = lerHtmlDoGoogle(a.html)
+    const c = conferirContrato(doc)
     const quem = c.resumo.primeiroNome ?? a.nome
     const link = a.link ? `\nDocumento: ${a.link}` : ''
     const fila = c.pronto
@@ -81,6 +88,19 @@ export async function rodadaContratos(db: Banco, arquivos: ArquivoContrato[]): P
       antes: antes ?? undefined,
       depois: { situacao, falta: c.falta.length, avisos: c.avisos.length },
     })
+
+    if (planilha) {
+      try {
+        const hoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+        const reg = await registrarNaPlanilha(planilha, { contratantes: contratantesDo(doc), pagamento: pagamentoDo(doc), conferencia: c, hoje })
+        if (reg) {
+          // só a linha e as colunas: o conteúdo (CPF, e-mail) fica na planilha
+          await auditar(db, { quem: 'agente:contratos', acao: reg.nova ? 'planilha.nova_linha' : 'planilha.completar', alvo: `contrato:${a.id}`, depois: reg })
+        }
+      } catch (e) {
+        await registrarExecucao(db, 'contratos', 'erro', `Planilha não atualizada (${quem}): ${e instanceof Error ? e.message : e}`)
+      }
+    }
   }
   await db.query(`UPDATE agentes SET ultima_execucao = now() WHERE id = 'contratos'`)
   return r

@@ -60,12 +60,16 @@ Painel único dos agentes da Pataro Treinamentos. Foco desde 12/11/2026. O Norma
 1. **Henrique: ligar o chip** — pôr o número do chip do agente no grupo do comercial (WhatsApp normal), ler o QR em
    Integrações → WhatsApp e, na linha `grupo:comercial`, escolher o grupo, marcar Enviar e Salvar. O robô **não**
    adivinha o grupo: a escolha é de uma pessoa, uma vez só
-2. ~~**Rodada de contratos dentro da Central**~~ ✅ 18/11 (falta deploy): `lib/rodada-contratos.ts` confere a pasta a cada
+2. ~~**Rodada de contratos dentro da Central**~~ ✅ 18/11 (no ar, commit 8cecd45): `lib/rodada-contratos.ts` confere a pasta a cada
    10 min (ligada no `instrumentation.ts`, primeira 30 s depois de subir) e pelo botão **Conferir agora** no cartão do
    agente. Respeita o botão de parar, só baixa documento novo ou alterado, erro do Google vai pra auditoria
    (`agente.erro`). `npm run agente:contratos` usa a mesma função. Testado no PC contra a pasta real (0 novos desde 17/11)
-3. **Registrar na planilha** Gestão Contratos Trilha a cada contrato novo (colunas acima; nunca sobrescrever linha
-   preenchida à mão; só colunas que o agente sabe: data, contratante, forma, valor, "Contrato pronto")
+3. ~~**Registrar na planilha**~~ ✅ 18/11 (falta deploy): `lib/planilha-contratos.ts`. Acha a linha do cliente pelo CPF/CNPJ
+   (coluna E) ou pelo nome (D ou C) e **só completa célula em branco** (D a J, L = o que falta); marca "Contrato pronto"
+   quando pronto, nunca desmarca. Sem linha do cliente, cria uma depois do último cliente (Nº seguinte, caixinhas
+   desmarcadas, nota em Observações pra completar data da venda, comprador e transação Hotmart). Cabeçalho fora da
+   ordem = não escreve nada. Planilha fora do ar não segura a fila (erro vai pra auditoria). Auditoria guarda só linha
+   e colunas, nunca o conteúdo. Cabeçalho real conferido em 18/11 (`.tmp/cabecalho.ts`, só leitura)
 4. **Primeiro contrato novo** (criado a partir de 17/11) cai na fila → Hoklo aprova → aviso sai no grupo do comercial
 5. **Envio pro ZapSign depois da aprovação**: sem API = Claude fazendo os cliques; com o Equipe = API (Fred e Hoklo decidem)
 6. **Grupos de alunos** na lista permitida (tela do WhatsApp, "Ler") quando o chip estiver nos grupos

@@ -3,6 +3,7 @@
  * pelo botão "Conferir agora" no cartão do agente. Respeita o botão de parar.
  *
  * .env: GOOGLE_SERVICO_JSON (chave do robô) e CONTRATOS_PASTA_ID. Sem os dois, não liga.
+ * Com CONTRATOS_PLANILHA_ID, registra cada contrato conferido na Gestão Contratos Trilha (aba Contratos).
  * A "Minuta do Contrato" e cópias de modelo ficam de fora. Só entra contrato criado a partir de CONTRATOS_DESDE
  * (padrão 17/11/2026): os de antes já foram pra assinatura à mão e não podem voltar pra fila.
  */
@@ -10,12 +11,14 @@ import type { Banco } from './db'
 import { getBanco } from './db'
 import { registrarExecucao } from './agentes'
 import { rodadaContratos, type ArquivoContrato, type ResultadoRodada } from './agente-contratos'
-import { exportarHtml, listarDocsDaPasta, type ArquivoDrive } from './google-servico'
+import { escreverPlanilha, exportarHtml, lerPlanilha, listarDocsDaPasta, type ArquivoDrive } from './google-servico'
+import type { PlanilhaContratos } from './planilha-contratos'
 
 /** De onde vêm os contratos. No servidor é o Drive; nos testes, uma lista inventada. */
 export interface FonteContratos {
   listar(): Promise<ArquivoDrive[]>
   html(id: string): Promise<string>
+  planilha?: PlanilhaContratos
 }
 
 export type ResultadoConferencia = ResultadoRodada & { parado?: boolean }
@@ -29,7 +32,14 @@ export function contratosConfigurado(): boolean {
 export function fonteDrive(): FonteContratos {
   const pasta = process.env.CONTRATOS_PASTA_ID
   if (!pasta) throw new Error('CONTRATOS_PASTA_ID ausente: falta o id da pasta Contratos Trilha no .env.')
-  return { listar: () => listarDocsDaPasta(pasta), html: exportarHtml }
+  const id = process.env.CONTRATOS_PLANILHA_ID
+  const planilha: PlanilhaContratos | undefined = id
+    ? {
+        ler: () => lerPlanilha(id, 'Contratos!A:T'),
+        escrever: (celulas) => escreverPlanilha(id, celulas.map((c) => ({ range: `Contratos!${c.ref}`, valor: c.valor }))),
+      }
+    : undefined
+  return { listar: () => listarDocsDaPasta(pasta), html: exportarHtml, planilha }
 }
 
 /**
@@ -55,7 +65,7 @@ export async function conferirPasta(
       if (c && (c.versao === d.modifiedTime || c.situacao === 'enviado' || c.situacao === 'assinado')) continue
       arquivos.push({ id: d.id, nome: d.name, versao: d.modifiedTime, link: d.webViewLink, html: await fonte.html(d.id) })
     }
-    const r = await rodadaContratos(db, arquivos)
+    const r = await rodadaContratos(db, arquivos, fonte.planilha)
     return { ...r, vistos: docs.length }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)

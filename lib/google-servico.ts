@@ -24,12 +24,14 @@ function chave(): Chave {
 
 const b64 = (o: object | Buffer) => (Buffer.isBuffer(o) ? o : Buffer.from(JSON.stringify(o))).toString('base64url')
 
-let cache: { token: string; expira: number; escopos: string } | null = null
+// um token por conjunto de escopos (Drive e Sheets se alternam na mesma rodada)
+const cache = new Map<string, { token: string; expira: number }>()
 
 /** Token de acesso (vale 1 hora; reaproveitado até faltar 1 minuto). */
 export async function tokenGoogle(escopos: string[]): Promise<string> {
   const esc = escopos.join(' ')
-  if (cache && cache.escopos === esc && cache.expira > Date.now() + 60_000) return cache.token
+  const guardado = cache.get(esc)
+  if (guardado && guardado.expira > Date.now() + 60_000) return guardado.token
   const k = chave()
   const agora = Math.floor(Date.now() / 1000)
   const corpo = `${b64({ alg: 'RS256', typ: 'JWT' })}.${b64({ iss: k.client_email, scope: esc, aud: 'https://oauth2.googleapis.com/token', iat: agora, exp: agora + 3600 })}`
@@ -41,7 +43,7 @@ export async function tokenGoogle(escopos: string[]): Promise<string> {
   })
   if (!r.ok) throw new Error(`O Google recusou a chave do robô (${r.status}).`)
   const j = (await r.json()) as { access_token: string; expires_in: number }
-  cache = { token: j.access_token, expira: Date.now() + j.expires_in * 1000, escopos: esc }
+  cache.set(esc, { token: j.access_token, expira: Date.now() + j.expires_in * 1000 })
   return j.access_token
 }
 
@@ -86,4 +88,28 @@ export async function exportarHtml(arquivoId: string): Promise<string> {
   })
   if (!r.ok) throw new Error(`Não deu pra ler o documento ${arquivoId} (${r.status}).`)
   return r.text()
+}
+
+const PLANILHAS = ['https://www.googleapis.com/auth/spreadsheets']
+
+/** Valores de um intervalo como aparecem na tela (ex.: "Contratos!A:T"). */
+export async function lerPlanilha(planilhaId: string, intervalo: string): Promise<string[][]> {
+  const token = await tokenGoogle(PLANILHAS)
+  const r = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${planilhaId}/values/${encodeURIComponent(intervalo)}`, {
+    headers: { authorization: `Bearer ${token}` },
+  })
+  if (!r.ok) throw new Error(`Não deu pra ler a planilha (${r.status}). Ela foi compartilhada com o robô?`)
+  return ((await r.json()) as { values?: string[][] }).values ?? []
+}
+
+/** Escreve célula a célula, do jeito que o valor chega (RAW: texto fica texto, número fica número, true marca a caixinha). */
+export async function escreverPlanilha(planilhaId: string, celulas: { range: string; valor: string | number | boolean }[]): Promise<void> {
+  if (!celulas.length) return
+  const token = await tokenGoogle(PLANILHAS)
+  const r = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${planilhaId}/values:batchUpdate`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ valueInputOption: 'RAW', data: celulas.map((c) => ({ range: c.range, values: [[c.valor]] })) }),
+  })
+  if (!r.ok) throw new Error(`Não deu pra escrever na planilha (${r.status}). O robô é editor dela?`)
 }
