@@ -2,100 +2,83 @@
 
 Painel único dos agentes da Pataro Treinamentos. Foco desde 12/11/2026. O Norman é o dono (P0).
 
-## Onde paramos (17/11/2026, noite) — ler primeiro
+## Onde paramos (18/11/2026, noite) — ler primeiro
 
-**Meta:** entregar tudo até **quinta 19/11 cedo** (sexta 20/11 é feriado e o time não trabalha).
+**No ar:** https://central.patarotreinamentos.com.br (último deploy: commit d862b7b). Login Google só pros 3 e-mails:
+Fred `patarofrederico@gmail.com` (stakeholder), Hoklo `gestao@patarotreinamentos.com.br` (gerente), Norman
+`gestaopatarotreinamentos@gmail.com` (executor). 102 testes passando. **Tudo depende agora do chip do agente.**
 
-### Feito em 17/11
-- **Central no ar** em https://central.patarotreinamentos.com.br: VPS + Neon + login Google só pros 3 e-mails
-  (Fred `patarofrederico@gmail.com` stakeholder, Hoklo `gestao@patarotreinamentos.com.br` gerente, Norman
-  `gestaopatarotreinamentos@gmail.com` executor). Banco migrado e semeado (6 agentes, 18 verbetes do Cérebro)
-- **Visual da referência** (vídeo do Nathan, `docs/referencia/nathan-lopes-2026-10-28/`): menu lateral, agentes
-  por área (`lib/equipe.ts`), cartão com batimento (`app/onda.tsx`), Cérebro com sinapses (`app/cerebro/mapa.tsx`),
-  telas novas **Organograma** e **Integrações** (`lib/integracoes.ts`). Fundo branco, Cérebro preto, dourado
-- **Plano da Central** reescrito pra Fred e Hoklo e enviado no grupo (`plano-central.md` → `pdf/`). Parte técnica
-  em `notas-tecnicas.md`
-- **Desenho da Fase 1 do CS** (`cs-respostas.md` → `pdf/cs-respostas.pdf`): agente **manda pelo WhatsApp depois
-  da aprovação na Central** (sem modo sombra). **Falta o Henrique mandar pro Hoklo aprovar**
-- **ZapSign conferido** na conta gestão: plano **Profissional, sem API** (240 docs/ano, 48 usados, 4/10 usuários).
-  Equipe custa +R$ 20/mês no anual. **Fred e Hoklo decidem** (o Henrique acha que vão assinar o Equipe)
-- **Agente de contratos, parte 1** (sem acesso ao Drive ainda), 16 testes com dados inventados:
-  - `lib/contratos.ts`: lê o HTML exportado do Google Docs no formato da "Minuta do Contrato" (tabela do
-    contratante com rótulo e valor na mesma célula; quadro da cláusula 7; vigência em 1.1, 2.3, 2.6 e 6.1;
-    marcação amarela) e lista o que falta. Pega o quadro igual ao exemplo da minuta (R$ 35.000, 08/09/2026,
-    "[Cartão de credito]")
-  - `lib/agente-contratos.ts`: rodada que põe na fila "pronto pra assinatura" (destino `zapsign:trilha`) ou
-    "travado" (destino `grupo:comercial`, mensagem pronta), tabela `contratos`, sem repetir versão
-  - `lib/google-servico.ts` + `npm run agente:contratos`: robô do Google lê a pasta. Só contratos criados a partir
-    de `CONTRATOS_DESDE` (padrão 2026-11-17), pros antigos não voltarem pra fila
+### Situação de cada agente
 
-### Feito em 17/11, à tarde
-- **WhatsApp do agente no ar na VPS** (deploy do commit 5c8d21a, à noite): Evolution API v2.3.7 + Postgres próprio no
-  `compose.yml` (sem porta pra internet; a Central fala com ele por `http://whatsapp:8080`; guarda só a sessão do
-  chip). Tela **Integrações → WhatsApp** (`app/integracoes/whatsapp/`) mostra o QR, o estado e a lista de
-  **grupos liberados** (tabela `destinos`: a fila guarda só a chave `grupo:comercial`, uma pessoa escolhe o grupo
-  de verdade; "Ler" = lista permitida do CS). Envio em `lib/enviador.ts`: só item aprovado, só destino ligado,
-  respeita o botão de parar, não repete, reserva o item antes de mandar. Sai logo depois da aprovação e numa
-  rodada a cada minuto (`instrumentation.ts`). 12 testes em `tests/whatsapp.test.ts`. Testado no PC com o
-  Evolution de verdade (`deploy/whatsapp-local.yml`): QR gerado e tela ok
-- **Robô do Google ligado:** `agente-contrato@centralpataro.iam.gserviceaccount.com`, APIs do Drive e do Sheets
-  ativadas, pasta Contratos Trilha compartilhada (`CONTRATOS_PASTA_ID=1wk8rUsZHDRKkE0YfdTBAz7hUWjzjrj5l`). Chave no PC em
-  `~/.central/robo-google.json` (fora do git). Na VPS: `/opt/central/robo-google.json` (dono uid 1000, 600), montado
-  no container em `/run/segredos/robo-google.json`. Planilha **Gestão Contratos Trilha** compartilhada como editor
-  (`CONTRATOS_PLANILHA_ID=1tdffmdMeCVmw3-R7kFMHdojt_1BrJCPbzxvI85RAauU`, aba **Contratos**, 20 colunas: Nº, Data da
-  venda, Comprador (Hotmart), Contratante no contrato, CPF/CNPJ do contratante, E-mail, WhatsApp, Forma de pagamento,
-  Valor total (R$), Detalhe do pagamento, Transação Hotmart, Dados a solicitar, Enviar mensagem, Enviar (2ª
-  contratante), Mensagem enviada, Dados recebidos, Contrato pronto, Enviado no AppSing, Assinado, Observações)
-- **Deploy de 17/11 à noite:** tabela `destinos` criada no Neon, `.env` da VPS com `GOOGLE_SERVICO_JSON`,
-  `CONTRATOS_PASTA_ID`, `CONTRATOS_PLANILHA_ID`, `CONTRATOS_DESDE`, `WHATSAPP_CHAVE`, `WHATSAPP_DB_SENHA`,
-  `WHATSAPP_INSTANCIA` (cópia em `.env.producao`). Conferido dentro do container: Evolution 2.3.7 respondendo, chave
-  do WhatsApp aceita, chave do robô lida. Código no GitHub (TreinamentosPataro/central-pataro)
-- **Teste seco com os 16 contratos reais** (sem gravar nada): a régua estava apertada. Ajustado: marcação amarela
-  não trava (o comercial pinta o que preenche), forma entre colchetes vale ("[PIX]") e só trava a lista da minuta,
-  parcelas em texto livre, campo em branco do cliente não herda o endereço da Pataro, "Minas Gerais" sem cidade pede a
-  cidade. Resultado: 6 prontos, 10 travados por falta de verdade (CEP, bairro, e-mail, telefone em branco; 2 com o
-  quadro igual ao exemplo da minuta, R$ 35 mil em 08/09)
+| Agente | O que já roda | Falta pra funcionar de verdade |
+|---|---|---|
+| **Contratos** | Confere a pasta Contratos Trilha a cada 10 min + botão "Conferir agora"; registra na planilha Gestão Contratos Trilha (só célula em branco); pronto → fila (`zapsign:trilha`), travado → aviso pro `grupo:comercial` (já ligado, Enviar on) | Chip conectado; primeiro contrato novo do Bruno (nenhum desde 17/11); ZapSign sem API → envio pra assinatura ainda à mão (Fred e Hoklo decidem o plano Equipe) |
+| **SDR** | Conversa privada no chip vira lead (`/leads`); rodada `/sdr` escreve pelo SPIN do Thales; aprovada sai pro lead; qualificado → resumo pro `grupo:comercial` | Chip conectado; anúncio apontar pro número do chip (Hoklo); 10 conversas reais e nome do agente (Hoklo) pra ajustar o tom |
+| **CS** | Desenho da Fase 1 **aprovado pelo Hoklo (18/11)**. Acompanhamento nos grupos: lê só grupo com "Ler", pergunta sem resposta há 30 min → rodada `/cs` (Cérebro + 5 aulas do catálogo da Pataro I.A) → aprovada sai no mesmo grupo. **73 grupos de acompanhamento já cadastrados** com Ler on e Enviar off | Chip conectado e adicionado nos 73 grupos (Henrique, 18/11 à noite); planilha de alunos (5 abas) → ficha real (Henrique encaminha); ligar "Enviar" nos grupos quando quiserem que a resposta saia |
+| Tráfego, Social, Financeiro | Cartão e página "em construção" | São do Hoklo |
 
-### Próximos passos (em ordem)
-1. **Henrique: ligar o chip** — pôr o número do chip do agente no grupo do comercial (WhatsApp normal), ler o QR em
-   Integrações → WhatsApp e, na linha `grupo:comercial`, escolher o grupo, marcar Enviar e Salvar. O robô **não**
-   adivinha o grupo: a escolha é de uma pessoa, uma vez só
-2. ~~**Rodada de contratos dentro da Central**~~ ✅ 18/11 (no ar, commit 8cecd45): `lib/rodada-contratos.ts` confere a pasta a cada
-   10 min (ligada no `instrumentation.ts`, primeira 30 s depois de subir) e pelo botão **Conferir agora** no cartão do
-   agente. Respeita o botão de parar, só baixa documento novo ou alterado, erro do Google vai pra auditoria
-   (`agente.erro`). `npm run agente:contratos` usa a mesma função. Testado no PC contra a pasta real (0 novos desde 17/11)
-3. ~~**Registrar na planilha**~~ ✅ 18/11 (no ar, commit 579ad10): `lib/planilha-contratos.ts`. Acha a linha do cliente pelo CPF/CNPJ
-   (coluna E) ou pelo nome (D ou C) e **só completa célula em branco** (D a J, L = o que falta); marca "Contrato pronto"
-   quando pronto, nunca desmarca. Sem linha do cliente, cria uma depois do último cliente (Nº seguinte, caixinhas
-   desmarcadas, nota em Observações pra completar data da venda, comprador e transação Hotmart). Cabeçalho fora da
-   ordem = não escreve nada. Planilha fora do ar não segura a fila (erro vai pra auditoria). Auditoria guarda só linha
-   e colunas, nunca o conteúdo. Cabeçalho real conferido em 18/11 (`.tmp/cabecalho.ts`, só leitura)
-4. **Primeiro contrato novo** (criado a partir de 17/11) cai na fila → Hoklo aprova → aviso sai no grupo do comercial
-5. **Envio pro ZapSign depois da aprovação**: sem API = Claude fazendo os cliques; com o Equipe = API (Fred e Hoklo decidem)
-6. **CS nos grupos (acompanhamento)** ✅ 18/11 (falta deploy e migrar: tabela `grupo_mensagens`): mensagem de grupo
-   **liberado pra leitura** (Integrações → WhatsApp, "Ler") entra pela mesma porta do SDR e fica em `grupo_mensagens`;
-   grupo fora da lista é descartado. Pergunta com mais de 30 min e menos de 3 dias, sem resposta citando → rodada `/cs`
-   (`scripts/cs.ts`, instruções em `lib/cs-instrucoes.ts`, 5 aulas sugeridas do catálogo da Pataro I.A por pergunta,
-   lido de `../fred-ia/conteudo/`) → fila (`pergunta_sem_resposta`, destino = o grupo da pergunta) → aprovada, sai no
-   mesmo grupo. Ignorar pede motivo. CPF na resposta = recusada. 9 testes (`tests/cs-grupos.test.ts`). Página do agente
-   mostra os grupos lidos e as perguntas esperando. Falta: chip nos grupos de alunos e marcar "Ler" (e "Enviar")
-7. **Planilha de alunos** (5 abas, do Hoklo): `npm run importar` → primeira ficha real (entrega 1 do CS)
-8. **Cérebro**: preços, reembolso, metas e tom estão "a preencher" (textos do Fred ou do Hoklo)
-9. **SDR, 1ª versão** ✅ 18/11 (no ar, commit 973bc12; tabelas criadas no Neon): mesma linha dos outros agentes, modo semiautomático.
-   - Mensagem privada no chip do agente → `POST /api/whatsapp/entrada?chave=…` (o Evolution chama pela rede interna;
-     chave sai da `WHATSAPP_CHAVE`, sem segredo novo; avisos ligados sozinhos em `lib/rodada-whatsapp.ts` quando o chip
-     conecta) → tabelas `leads` e `lead_mensagens`. Grupo, status e mensagem nossa ficam de fora
-   - Rodada: skill `/sdr` (`.claude/skills/sdr/`) → `scripts/sdr.ts pendentes` (conversas + instruções + Cérebro em
-     `.tmp/`) → o Claude escreve pelo SPIN (`lib/sdr-instrucoes.ts`) → `scripts/sdr.ts propor` → fila
-   - Aprovado → sai pro número de onde o lead escreveu (`lib/enviador.ts`, destino `lead:<id>`) e entra na conversa.
-     Lead qualificado → resumo pro `grupo:comercial` (Bruno). Preço/desconto na mensagem = recusado. Quem sumiu: puxado
-     de volta depois de 24 h, no máximo 2 vezes. Botão "Parar de falar com esse número" na tela **Leads** (`/leads`)
-   - 13 testes (`tests/sdr.test.ts`). Testado no PC com lead simulado (`npm run sdr -- simular`)
-   - **Conferir depois do deploy:** formato do aviso do Evolution 2.3.7 (`GET /webhook/find/agente` e uma mensagem de
-     teste pro chip), porque o leitor foi escrito pelo formato documentado, sem mensagem real
-   - Falta: chip conectado (item 1), número que o anúncio aponta (Hoklo), 10 conversas reais pra ajustar o tom, nome
-     do agente
-10. ~~**Desenho da Fase 1 do CS**~~ ✅ aprovado pelo Hoklo (18/11)
+**Página de cada agente** (`/agentes/<id>`, o cartão da tela inicial é clicável): ficha, "o que ele precisa pra
+funcionar" (conferido na hora + pendências combinadas com dono, em `lib/painel-agente.ts` → `COMBINADAS`: resolveu, tira
+de lá), aprovações do agente, parte própria e atividade.
+
+**IA em modo de teste:** SDR e CS rodam pelo Claude Code (skills `/sdr` e `/cs` neste repositório) e uma pessoa aprova
+na fila. Combinado em 18/11: se a usabilidade for boa, passa pra API do Claude (rodada dentro da Central, com teto de
+gasto). **Não é regra fixa** que tudo tenha que sair da Central.
+
+### Quando o chip conectar (conferir nesta ordem)
+1. **QR do chip** em Integrações → WhatsApp. O Evolution 2.3.7 tem um problema conhecido de pareamento ("não é possível
+   conectar novos dispositivos"): no WhatsApp do Henrique **funcionou na 2ª tentativa**. Se falhar várias vezes, a
+   correção é trocar o Baileys dentro da imagem (issue evolution-foundation/evolution-api#2437; o fork citado lá é de
+   terceiro: revisar e travar no commit antes de usar). O chip ainda não tem sessão: não há nada a perder
+2. **Avisos de mensagem nova:** ligam sozinhos até 1 min depois de conectar (`lib/rodada-whatsapp.ts`, log
+   `[whatsapp] avisos de mensagem nova ligados`). Conferir na VPS com `GET /webhook/find/agente` no `127.0.0.1:3301`
+   (cabeçalho `apikey` = `WHATSAPP_CHAVE`)
+3. **Formato real do aviso** (nunca testado com mensagem de verdade): mandar um "oi" de outro celular pro chip → tem
+   que aparecer em `/leads`; mandar uma pergunta num grupo de acompanhamento → tem que contar em "Grupos que ele lê" na
+   página do CS. Se não aparecer, ver o log do container e ajustar `lerEntradaEvolution` (`lib/sdr.ts`) ou
+   `lerMensagemGrupo` (`lib/cs-grupos.ts`)
+4. Primeira rodada de verdade: `/sdr` e `/cs`
+
+### Próximos passos de desenvolvimento (em ordem)
+1. **Ficha real do aluno (entrega 1 do CS):** quando chegar a planilha de alunos (5 abas), `npm run importar` e conferir 5
+   alunos na mão contra a fonte
+2. **Entrega 2 do CS (02/12):** call, grupo Vendas e plano de ação na ficha. O banco dos Planos de Ação é **outro Neon**
+   (não é o da Central, ao contrário do que o desenho diz): precisa de um acesso só de leitura lá. Pedir ao Henrique
+   antes de criar usuário no banco de produção dos Planos de Ação
+3. **Envio pro ZapSign** depois da aprovação: sem API = Claude fazendo os cliques; com o Equipe = API
+4. **Cérebro:** preços, reembolso, metas e tom estão "a preencher" (Fred ou Hoklo)
+5. **Pendências combinadas editáveis pela Central** (hoje estão no código), se o Henrique quiser
+
+### Feito em 18/11 (resumo; detalhe no git log e em `confraria/diario/2026-11.md` do normanOS)
+- Contratos rodando sozinhos na Central (8cecd45) e registro na planilha (579ad10)
+- SDR 1ª versão (973bc12): tabelas `leads` e `lead_mensagens`, porta `POST /api/whatsapp/entrada?chave=…` (chave
+  derivada da `WHATSAPP_CHAVE`, sem segredo novo; o Evolution chama `http://painel:3300` pela rede interna), envio pro
+  lead em `lib/enviador.ts` (destino `lead:<id>`), recusa preço/desconto, retoma quem sumiu no máximo 2 vezes
+- Página de cada agente (242e3cf)
+- CS nos grupos (9cdce6e, d862b7b): tabela `grupo_mensagens`, `lib/cs-grupos.ts`, `lib/cs-instrucoes.ts`, `scripts/cs.ts`.
+  O catálogo de aulas é lido de `../fred-ia/conteudo/` (normanOS) na hora da rodada: rodar `/cs` a partir desta pasta
+  dentro do normanOS (ou com `CS_AULAS_DIR`)
+- **Grupos cadastrados:** os 108 grupos do WhatsApp do Henrique foram listados por uma conexão temporária no Evolution
+  (criada e apagada em seguida; só nomes e códigos, nenhuma mensagem). Entraram na tabela `destinos`: 73 de
+  acompanhamento (`grupo:trilha-<nome>`, Ler on, Enviar off), `grupo:comercial` (Enviar on) e `grupo:vendas` (tudo off).
+  Os 4 grupos grandes (Trilha Prev. Avisos, Confraria, Confraria 2027 Oficial, Confraria Experience 2026) ficaram de
+  fora por enquanto (volume); internos e pessoais também. A lista completa não foi guardada
+
+### Referência técnica (configurado em 17/11)
+- **WhatsApp do agente:** Evolution API v2.3.7 + Postgres próprio no `compose.yml` (sem porta pra internet; a VPS
+  enxerga em `127.0.0.1:3301`). Instância `agente`. Guarda só a sessão do chip. Envio só de item aprovado, pra destino
+  ligado, respeitando o botão de parar; sai logo depois da aprovação e numa rodada a cada minuto (`instrumentation.ts`)
+- **Robô do Google:** `agente-contrato@centralpataro.iam.gserviceaccount.com`. Pasta Contratos Trilha
+  (`CONTRATOS_PASTA_ID=1wk8rUsZHDRKkE0YfdTBAz7hUWjzjrj5l`, leitor) e planilha Gestão Contratos Trilha
+  (`CONTRATOS_PLANILHA_ID=1tdffmdMeCVmw3-R7kFMHdojt_1BrJCPbzxvI85RAauU`, editor, aba **Contratos**, 20 colunas de Nº a
+  Observações; o agente confere o cabeçalho antes de escrever). Chave no PC em `~/.central/robo-google.json`; na VPS em
+  `/opt/central/robo-google.json`, montada em `/run/segredos/robo-google.json`. Só entra contrato criado a partir de
+  `CONTRATOS_DESDE` (2026-11-17)
+- **Régua dos contratos** (ajustada com os 16 contratos reais): amarelo não trava, forma entre colchetes vale, parcelas em
+  texto livre, campo em branco não herda o endereço da Pataro, estado sem cidade pede a cidade
+- **ZapSign:** conta gestão, plano Profissional sem API (240 docs/ano, 48 usados, 4/10 usuários). Equipe: +R$ 20/mês no anual
+- `.env` da VPS (cópia em `.env.producao`, fora do git): `GOOGLE_SERVICO_JSON`, `CONTRATOS_PASTA_ID`,
+  `CONTRATOS_PLANILHA_ID`, `CONTRATOS_DESDE`, `WHATSAPP_CHAVE`, `WHATSAPP_DB_SENHA`, `WHATSAPP_INSTANCIA`
 
 ### Pra trabalhar no PC
 - `npm run dev` (banco local em `.dados/`, entrada escolhendo o usuário; dados de teste com `npm run db:semear -- --demo`).
