@@ -27,7 +27,6 @@ const COMBINADAS: Record<string, Requisito[]> = {
     { nome: 'IA respondendo sozinha (API do Claude)', ok: false, nota: 'Por enquanto a rodada é pelo Claude (/sdr). Se o teste for bem, passa pra API', dono: 'Fred e Hoklo, depois do teste' },
   ],
   cs: [
-    { nome: 'Desenho da Fase 1 aprovado', ok: false, nota: 'PDF com o desenho e as respostas às 9 perguntas', dono: 'Hoklo aprova' },
     { nome: 'Planilha de alunos (5 abas)', ok: false, nota: 'Vira a primeira ficha real de cada aluno', dono: 'Henrique encaminha' },
   ],
 }

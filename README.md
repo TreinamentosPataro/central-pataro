@@ -95,7 +95,7 @@ Painel único dos agentes da Pataro Treinamentos. Foco desde 12/11/2026. O Norma
      teste pro chip), porque o leitor foi escrito pelo formato documentado, sem mensagem real
    - Falta: chip conectado (item 1), número que o anúncio aponta (Hoklo), 10 conversas reais pra ajustar o tom, nome
      do agente
-10. **Mandar o PDF do CS pro Hoklo aprovar** (`pdf/cs-respostas.pdf`), se ainda não foi
+10. ~~**Desenho da Fase 1 do CS**~~ ✅ aprovado pelo Hoklo (18/11)
 
 ### Pra trabalhar no PC
 - `npm run dev` (banco local em `.dados/`, entrada escolhendo o usuário; dados de teste com `npm run db:semear -- --demo`).
